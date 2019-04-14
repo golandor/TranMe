@@ -280,7 +280,8 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
                             final User myUser = getUserByDataSnapshot(dataSnapshot);
                             try {
                                 System.out.println("CourseId: " + course_id + "user: " + myUser.getFullName());
-                                myService.addUserToWaitingList(course_id, myUser);
+                              //  myService.addUserToWaitingList(course_id, myUser);
+                                myService.RemoveUserFromWaitingList(course_id, myUser);
                             } catch (JSONException e) {
                                 e.printStackTrace();
                             }

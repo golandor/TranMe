@@ -8,7 +8,7 @@ public interface IMyService {
     void registerUserToCourse();
     void deleteUserFromCourse();
     void addUserToWaitingList(String courseId, User user) throws JSONException;
-    void removeUserToWaitingList(String courseId, String userId) throws JSONException;
+    void RemoveUserFromWaitingList(String courseId, User user) throws JSONException;
     void rateCourse();
     boolean isFull(String courseId);
     boolean isOnWaitingList(String courseId);
