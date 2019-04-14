@@ -1,4 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
-<menu xmlns:android="http://schemas.android.com/apk/res/android">
+<menu
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    >
+
+    <item android:id="@+id/main"
+        android:title="@string/home"
+        android:icon="@drawable/ic_event_24dp"/>
+
+    <item android:id="@+id/myZone"
+        android:title="@string/my_zone"
+        android:icon="@drawable/ic_chart"/>
+
+    <item android:id="@+id/ideas"
+        android:title="@string/ideas"
+        android:icon="@drawable/ic_lightbulb"/>
 
 </menu>

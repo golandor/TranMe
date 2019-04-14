@@ -1,11 +1,10 @@
 package com.example.golan.train.Fragments;
 
 import android.app.DatePickerDialog;
-import android.content.Intent;
+import android.content.Context;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentTransaction;
 import android.util.Log;
@@ -20,11 +19,9 @@ import android.widget.RadioGroup;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.example.golan.train.Interfaces.fromFragmentToMainActivity;
 import com.example.golan.train.BL.User;
 import com.example.golan.train.R;
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.Task;
-import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 
 
@@ -39,14 +36,15 @@ public class SignUpDetails_Fragment extends Fragment {
     private TextView mDisplayDate;
     private DatePickerDialog.OnDateSetListener mDateSetListener;
     private LogIn_Fragment logIn_fragment;
-    private  String gender;
+    private String gender;
     private RadioGroup radio_group;
     private RadioButton genderRadioBtn;
-
+    private User newUser;
     private FirebaseAuth mAuth;
+    private View v1;
+    public fromFragmentToMainActivity listener;
 
     public SignUpDetails_Fragment() {
-
     }
 
     @Override
@@ -64,41 +62,72 @@ public class SignUpDetails_Fragment extends Fragment {
 
         mDisplayDate = view.findViewById(R.id.birthDate);
         radio_group = view.findViewById(R.id.radio_group);
-
+        regBtn = view.findViewById(R.id.registerId);
 
         initializeAttributes(view);
         setRegBtn(view);
         mDisplayDateListener();
         setmDisplayDateListener();
 
+        this.v1 = view;
+
         return view;
     }
+
+
+    @Override
+    public void onAttach(Context context) {
+        super.onAttach(context);
+        if (context instanceof fromFragmentToMainActivity) {
+            //init the listener
+            listener = (fromFragmentToMainActivity)context;
+        } else {
+            throw new RuntimeException(context.toString()
+                    + " must implement InteractionListener");
+        }
+    }
+
+    @Override
+    public void onDetach() {
+        super.onDetach();
+        listener = null;
+    }
+
+    public void listenerTrigger() {
+        this.listener.backFromDetailsFragment(newUser);
+        setFragment(logIn_fragment);
+    }
+
+
     private void setRegBtn(View view) {
 
-        int rgs_id = radio_group.getCheckedRadioButtonId();
-        genderRadioBtn = view.findViewById(rgs_id);
-        gender = genderRadioBtn.getText().toString();
 
-        regBtn = view.findViewById(R.id.registerId);
         regBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if(!validateReg()){
+                if(!validateReg(view)){
                     Toast.makeText(getActivity(), "Sign up has Failed",Toast.LENGTH_SHORT).show();
                 }
                 else {
-                    User newUser = new User(editTextFullName,"userIdForNow", gender, weigh,height);
-//                    onSignUpSuccess();
+                    int rgs_id = radio_group.getCheckedRadioButtonId();
+                    genderRadioBtn = v1.findViewById(rgs_id);
+                    if(genderRadioBtn == null){
+                    }
+                    else{
+                    }
+                    gender = genderRadioBtn.getText().toString();
+                    newUser = new User(editTextFullName,mAuth.getCurrentUser().getUid(), gender, weigh,height);
+                    listenerTrigger();
                 }
             }
         });
     }
 
-
-
-    private boolean validateReg() {
+    private boolean validateReg(View view) {
         boolean valid = true;
         editTextFullName = et_fullName.getText().toString().trim();
+
+
         //TODO fix editTextFullName.contains(("[0-9]+")))
         if(editTextFullName.isEmpty()|| et_fullName.length()>20 || editTextFullName.contains(("[0-9]+"))){
             et_fullName.setError("Please Enter Valid Name (Up To 20 Chars)");
@@ -135,6 +164,8 @@ public class SignUpDetails_Fragment extends Fragment {
             mDisplayDate.requestFocus();
             valid = false;
         }
+
+
 
         return valid;
     }

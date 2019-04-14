@@ -1,14 +1,30 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".Fragments.Scheduler_Fragment">
+    tools:context=".Fragments.Scheduler_Fragment"
+    android:background="@color/colorPrimaryDark"
+    android:layoutDirection="ltr">
 
-    <!-- TODO: Update blank fragment layout -->
-    <TextView
+
+    <com.prolificinteractive.materialcalendarview.MaterialCalendarView xmlns:app="http://schemas.android.com/apk/res-auto"
+        android:id="@+id/calendarView"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:text="@string/hello_blank_fragment" />
+        android:layout_height="wrap_content"
+        android:background="@color/colorGray"
+        android:outlineSpotShadowColor="@color/colorYellowDark"
+        app:mcv_arrowColor="@color/colorYellowDark"
+        app:mcv_selectionColor="@color/colorBlack"
+        app:mcv_showOtherDates="all" />
 
-</FrameLayout>
+    <android.support.v7.widget.RecyclerView
+        android:id="@+id/recyclerViewOnScheduler"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/calendarView"
+        android:paddingBottom="40dp"/>
+
+</RelativeLayout>

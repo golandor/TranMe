@@ -1,109 +1,180 @@
 package com.example.golan.train.Fragments;
 
-import android.content.Context;
-import android.net.Uri;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentTransaction;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Toast;
 
+import com.example.golan.train.BL.Course;
+import com.example.golan.train.BL.MyService;
+import com.example.golan.train.BL.RecyclerViewAdapter;
 import com.example.golan.train.R;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.Query;
+import com.google.firebase.database.ValueEventListener;
+import com.prolificinteractive.materialcalendarview.CalendarDay;
+import com.prolificinteractive.materialcalendarview.CalendarMode;
+import com.prolificinteractive.materialcalendarview.MaterialCalendarView;
+import com.prolificinteractive.materialcalendarview.OnDateSelectedListener;
 
-/**
- * A simple {@link Fragment} subclass.
- * Activities that contain this fragment must implement the
- * {@link Scheduler_Fragment.OnFragmentInteractionListener} interface
- * to handle interaction events.
- * Use the {@link Scheduler_Fragment#newInstance} factory method to
- * create an instance of this fragment.
- */
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Calendar;
+
 public class Scheduler_Fragment extends Fragment {
-    // TODO: Rename parameter arguments, choose names that match
-    // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-    private static final String ARG_PARAM1 = "param1";
-    private static final String ARG_PARAM2 = "param2";
 
-    // TODO: Rename and change types of parameters
-    private String mParam1;
-    private String mParam2;
+    View view;
+    private MaterialCalendarView materialCalendarView;
+    private DatabaseReference myRef;
+    private DatabaseReference courseRef;
+    private RecyclerView courseRecyclerView;
+    private ArrayList<Course> list;
+    private RecyclerViewAdapter adapter;
+    private LinearLayoutManager mLayoutManager;
 
-    private OnFragmentInteractionListener mListener;
+    private MyService myService;
 
     public Scheduler_Fragment() {
-        // Required empty public constructor
-    }
-
-    /**
-     * Use this factory method to create a new instance of
-     * this fragment using the provided parameters.
-     *
-     * @param param1 Parameter 1.
-     * @param param2 Parameter 2.
-     * @return A new instance of fragment Scheduler_Fragment.
-     */
-    // TODO: Rename and change types and number of parameters
-    public static Scheduler_Fragment newInstance(String param1, String param2) {
-        Scheduler_Fragment fragment = new Scheduler_Fragment();
-        Bundle args = new Bundle();
-        args.putString(ARG_PARAM1, param1);
-        args.putString(ARG_PARAM2, param2);
-        fragment.setArguments(args);
-        return fragment;
-    }
-
-    @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        if (getArguments() != null) {
-            mParam1 = getArguments().getString(ARG_PARAM1);
-            mParam2 = getArguments().getString(ARG_PARAM2);
-        }
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_scheduler_, container, false);
-    }
 
-    // TODO: Rename method, update argument and hook method into UI event
-    public void onButtonPressed(Uri uri) {
-        if (mListener != null) {
-            mListener.onFragmentInteraction(uri);
-        }
+        view = inflater.inflate(R.layout.fragment_scheduler_, container, false);
+        return view;
     }
 
     @Override
-    public void onAttach(Context context) {
-        super.onAttach(context);
-        if (context instanceof OnFragmentInteractionListener) {
-            mListener = (OnFragmentInteractionListener) context;
-        } else {
-            throw new RuntimeException(context.toString()
-                    + " must implement OnFragmentInteractionListener");
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+        myService = new MyService(getContext());
+
+
+        System.out.println("Before IsFulll");
+
+        myService.isFull("10:18:17:911");
+        System.out.println("After IsFulll");
+
+        initFireBase();
+        initRecyclerViewAndFireBaseRef();
+        initCalender();
+
+
+    }
+    private void setFragment(Fragment fragment){
+        FragmentTransaction ft = getFragmentManager().beginTransaction().addToBackStack(null);// when push the back btn we go back to the previous fragment
+        ft.replace(R.id.placeholder,fragment);
+        ft.commit();
+    }
+
+
+    public void initRecyclerViewAndFireBaseRef(){
+        courseRecyclerView = view.findViewById(R.id.recyclerViewOnScheduler);
+        mLayoutManager = new LinearLayoutManager(getContext());
+        courseRecyclerView.setLayoutManager(mLayoutManager);
+        mLayoutManager.setReverseLayout(true);
+        mLayoutManager.setStackFromEnd(true);
+        list = new ArrayList<>();
+        adapter = new RecyclerViewAdapter(getContext(), list);
+        courseRecyclerView.setAdapter(adapter);
+        courseRef = FirebaseDatabase.getInstance().getReference().child(getString(R.string.courses));
+
+        courseRef.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                // if we want to start the query we should only put this line on comment
+              //  courseRef.addListenerForSingleValueEvent(valueEventListener);
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+
+            }
+        });
+    }
+
+    private void setQuery(String myDate) {
+        Query query = courseRef.orderByChild("date").equalTo(myDate);
+        query.addListenerForSingleValueEvent(valueEventListener);
+    }
+
+    ValueEventListener valueEventListener = new ValueEventListener() {
+        @Override
+        public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+            if (dataSnapshot.exists()) {
+                list.clear();
+                for (DataSnapshot dataSnapshot1 : dataSnapshot.getChildren()
+                        ) {
+                    Course course = dataSnapshot1.getValue(Course.class);
+                    list.add(course);
+                }
+            }
+            else{
+                list.clear();
+            }
+            adapter.notifyDataSetChanged();
+
         }
+        @Override
+        public void onCancelled(@NonNull DatabaseError databaseError) {
+            Toast.makeText(getContext(),"Something went wrong",Toast.LENGTH_SHORT).show();
+        }
+    };
+
+    public void initFireBase() {
+        // myRef is just for write to fireBase
+        myRef = FirebaseDatabase.getInstance().getReference();
     }
 
     @Override
-    public void onDetach() {
-        super.onDetach();
-        mListener = null;
+    public void onStart() {
+        super.onStart();
     }
 
-    /**
-     * This interface must be implemented by activities that contain this
-     * fragment to allow an interaction in this fragment to be communicated
-     * to the activity and potentially other fragments contained in that
-     * activity.
-     * <p>
-     * See the Android Training lesson <a href=
-     * "http://developer.android.com/training/basics/fragments/communicating.html"
-     * >Communicating with Other Fragments</a> for more information.
-     */
-    public interface OnFragmentInteractionListener {
-        // TODO: Update argument type and name
-        void onFragmentInteraction(Uri uri);
+    public void initCalender() {
+        materialCalendarView = view.findViewById(R.id.calendarView);
+        Calendar calendar = Calendar.getInstance();
+        SimpleDateFormat mdFormat = new SimpleDateFormat("dd-MM-yyyy");
+        String strDate = mdFormat.format(calendar.getTime());
+
+        materialCalendarView.setDateSelected(calendar.getTime(),true);
+        materialCalendarView.setDynamicHeightEnabled(true);
+
+        materialCalendarView.state().edit()
+                .setFirstDayOfWeek(Calendar.SUNDAY)
+                .setMinimumDate(CalendarDay.from(2017, 1, 1))
+                .setMaximumDate(CalendarDay.from(2050, 12, 31))
+                .setCalendarDisplayMode(CalendarMode.WEEKS)
+                .commit();
+
+        materialCalendarView.setOnDateChangedListener(new OnDateSelectedListener() {
+            @Override
+            public void onDateSelected(@NonNull MaterialCalendarView widget, @NonNull CalendarDay date, boolean selected) {
+                int m = date.getMonth();
+                String day = String.valueOf(date.getDay());
+                if(date.getDay() <10){
+                    day = 0 + day;
+                }
+                m++;
+                String month = String.valueOf(m);
+                if(m<10){
+                     month = 0+month;
+                }
+                String myDate = day + "-" + month + "-" + date.getYear();
+                setQuery(myDate);
+            }
+        });
+        setQuery(strDate);
     }
 }

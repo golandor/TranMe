@@ -1,4 +1,4 @@
-package com.example.golan.train.Activities;
+package com.example.golan.train.Interfaces;
 
 import com.example.golan.train.BL.User;
 

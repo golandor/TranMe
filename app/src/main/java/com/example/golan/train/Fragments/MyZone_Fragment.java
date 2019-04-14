@@ -1,109 +1,122 @@
 package com.example.golan.train.Fragments;
 
-import android.content.Context;
-import android.net.Uri;
+
+import android.content.Intent;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
+import android.widget.Toast;
 
+import com.example.golan.train.Activities.MainActivity;
 import com.example.golan.train.R;
+import com.google.firebase.auth.FirebaseAuth;
+import com.hsalf.smilerating.BaseRating;
+import com.hsalf.smilerating.SmileRating;
 
-/**
- * A simple {@link Fragment} subclass.
- * Activities that contain this fragment must implement the
- * {@link MyZone_Fragment.OnFragmentInteractionListener} interface
- * to handle interaction events.
- * Use the {@link MyZone_Fragment#newInstance} factory method to
- * create an instance of this fragment.
- */
 public class MyZone_Fragment extends Fragment {
-    // TODO: Rename parameter arguments, choose names that match
-    // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-    private static final String ARG_PARAM1 = "param1";
-    private static final String ARG_PARAM2 = "param2";
 
-    // TODO: Rename and change types of parameters
-    private String mParam1;
-    private String mParam2;
-
-    private OnFragmentInteractionListener mListener;
+   // private Button logOutBtn;
+    private FirebaseAuth firebaseAuth;
+    private int rate;
+    View view;
 
     public MyZone_Fragment() {
-        // Required empty public constructor
-    }
-
-    /**
-     * Use this factory method to create a new instance of
-     * this fragment using the provided parameters.
-     *
-     * @param param1 Parameter 1.
-     * @param param2 Parameter 2.
-     * @return A new instance of fragment MyZone_Fragment.
-     */
-    // TODO: Rename and change types and number of parameters
-    public static MyZone_Fragment newInstance(String param1, String param2) {
-        MyZone_Fragment fragment = new MyZone_Fragment();
-        Bundle args = new Bundle();
-        args.putString(ARG_PARAM1, param1);
-        args.putString(ARG_PARAM2, param2);
-        fragment.setArguments(args);
-        return fragment;
     }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        if (getArguments() != null) {
-            mParam1 = getArguments().getString(ARG_PARAM1);
-            mParam2 = getArguments().getString(ARG_PARAM2);
-        }
+        setHasOptionsMenu(true);
+
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_my_zone_, container, false);
+         view = inflater.inflate(R.layout.fragment_my_zone_, container, false);
+        firebaseAuth = FirebaseAuth.getInstance();
+      //  setlogOutBtn();
+
+
+        SmileRating smileRating =  view.findViewById(R.id.smile_rating);
+       // @BaseRating.Smiley int smiley = smileRating.getSelectedSmile();
+        smileRating.setTextSelectedColor(Color.GREEN);
+
+        smileRating.setNameForSmile(BaseRating.TERRIBLE, "Too Easy!");
+        smileRating.setNameForSmile(BaseRating.BAD, "Easy");
+        smileRating.setNameForSmile(BaseRating.OKAY, "Medium");
+        smileRating.setNameForSmile(BaseRating.GOOD, "Hard");
+        smileRating.setNameForSmile(BaseRating.GREAT, "Very Hard!");
+
+        smileRating.setOnSmileySelectionListener(new SmileRating.OnSmileySelectionListener() {
+            @Override
+            public void onSmileySelected(@BaseRating.Smiley int smiley, boolean reselected) {
+                // reselected is false when user selects different smiley that previously selected one
+                // true when the same smiley is selected.
+                // Except if it first time, then the value will be false.
+                switch (smiley) {
+
+                    case SmileRating.TERRIBLE:
+                        Toast.makeText(getContext(),"" + smiley, Toast.LENGTH_SHORT).show();
+                        break;
+                    case SmileRating.BAD:
+                        Toast.makeText(getContext(),"" + smiley, Toast.LENGTH_SHORT).show();
+                        break;
+                    case SmileRating.OKAY:
+                        Toast.makeText(getContext(),"" + smiley, Toast.LENGTH_SHORT).show();
+                        break;
+                    case SmileRating.GOOD:
+                        Toast.makeText(getContext(),"" + smiley, Toast.LENGTH_SHORT).show();
+                        break;
+                    case SmileRating.GREAT:
+                        Toast.makeText(getContext(),"" + smiley, Toast.LENGTH_SHORT).show();
+                        break;
+                }
+            }
+        });
+
+//        smileRating.setOnRatingSelectedListener(new SmileRating.OnRatingSelectedListener() {
+//            @Override
+//            public void onRatingSelected(int level, boolean reselected) {
+//                // level is from 1 to 5 (0 when none selected)
+//                // reselected is false when user selects different smiley that previously selected one
+//                // true when the same smiley is selected.
+//                // Except if it first time, then the value will be false.
+//
+//                //Toast.makeText(getContext(),"Selected Rating" + level, Toast.LENGTH_SHORT).show();
+//            }
+//        });
+
+        return view;
     }
 
-    // TODO: Rename method, update argument and hook method into UI event
-    public void onButtonPressed(Uri uri) {
-        if (mListener != null) {
-            mListener.onFragmentInteraction(uri);
-        }
+   // private void setlogOutBtn() {
+    //    logOutBtn =  view.findViewById(R.id.logOutBtn);
+     //   logOutBtn.setOnClickListener(new View.OnClickListener() {
+      //      @Override
+      //      public void onClick(View view) {
+      //          firebaseAuth.signOut();
+      //          startAct();
+      //      }
+    //    });
+    //}
+
+    private void startAct() {
+        startActivity(new Intent(getContext(), MainActivity.class));
     }
+
 
     @Override
-    public void onAttach(Context context) {
-        super.onAttach(context);
-        if (context instanceof OnFragmentInteractionListener) {
-            mListener = (OnFragmentInteractionListener) context;
-        } else {
-            throw new RuntimeException(context.toString()
-                    + " must implement OnFragmentInteractionListener");
-        }
+    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+        menu.clear();
+        inflater.inflate(R.menu.navigation, menu);
+        super.onCreateOptionsMenu(menu, inflater);
     }
 
-    @Override
-    public void onDetach() {
-        super.onDetach();
-        mListener = null;
-    }
-
-    /**
-     * This interface must be implemented by activities that contain this
-     * fragment to allow an interaction in this fragment to be communicated
-     * to the activity and potentially other fragments contained in that
-     * activity.
-     * <p>
-     * See the Android Training lesson <a href=
-     * "http://developer.android.com/training/basics/fragments/communicating.html"
-     * >Communicating with Other Fragments</a> for more information.
-     */
-    public interface OnFragmentInteractionListener {
-        // TODO: Update argument type and name
-        void onFragmentInteraction(Uri uri);
-    }
 }

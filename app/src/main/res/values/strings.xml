@@ -20,5 +20,26 @@
     <string name="full_name">Full Name</string>
     <string name="weigh">Weigh</string>
     <string name="height">Height</string>
-    <string name="register">Register</string>
+    <string name="my_zone">My Zone</string>
+    <string name="home">Home</string>
+    <string name="profile">Profile</string>
+    <string name="ideas">Ideas</string>
+    <string name="time">Time</string>
+    <string name="course_name">Course Name</string>
+    <string name="coach_name">Coach Name</string>
+    <string name="course_status">Course Status</string>
+    <string name="header">Header</string>
+    <string name="description">Description</string>
+    <string name="course_location">Course Location</string>
+    <string name="m">M</string>
+    <string name="f">F</string>
+    <string name="courses">Courses</string>
+    <string name="waitingList">Join To Waiting List</string>
+    <string name="logout">LogOut</string>
+    <string name="users">Users</string>
+    <string name="cancel_regisration">Cancel Registration</string>
+    <string name="registered">Registered</string>
+    <string name="register">register</string>
+    <string name="waitingListOnFB">waitingList</string>
+    <string name="details">Details</string>
 </resources>

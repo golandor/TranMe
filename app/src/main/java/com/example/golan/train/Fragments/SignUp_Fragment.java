@@ -1,10 +1,7 @@
 package com.example.golan.train.Fragments;
 
-import android.app.Activity;
 import android.content.Context;
-import android.net.Uri;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentTransaction;
 import android.util.Patterns;
@@ -15,12 +12,8 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
-import com.example.golan.train.Activities.MainActivity;
+import com.example.golan.train.Interfaces.fromFragmentToMainActivity;
 import com.example.golan.train.R;
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.Task;
-import com.google.firebase.auth.AuthResult;
-import com.google.firebase.auth.FirebaseAuth;
 
 
 public class SignUp_Fragment extends Fragment {
@@ -30,7 +23,9 @@ public class SignUp_Fragment extends Fragment {
     private Button nextBtn;
 
     private SignUpDetails_Fragment detailsFragment;
-    private FirebaseAuth mAuth;
+    public fromFragmentToMainActivity listener;
+
+
 
     public SignUp_Fragment() {
     }
@@ -39,7 +34,7 @@ public class SignUp_Fragment extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        mAuth =  FirebaseAuth.getInstance();
+
 
     }
 
@@ -50,12 +45,37 @@ public class SignUp_Fragment extends Fragment {
         View view = inflater.inflate(R.layout.fragment_sign_up_, container, false);
 
         detailsFragment = new SignUpDetails_Fragment();
+
         initializeAttributes(view);
 
         setNextBtn(view);
 
         return view;
     }
+
+    @Override
+    public void onAttach(Context context) {
+        super.onAttach(context);
+        if (context instanceof fromFragmentToMainActivity) {
+            //init the listener
+            listener = (fromFragmentToMainActivity)context;
+        } else {
+            throw new RuntimeException(context.toString()
+                    + " must implement InteractionListener");
+        }
+    }
+
+    @Override
+    public void onDetach() {
+        super.onDetach();
+        listener = null;
+    }
+
+    public void listenerTrigger() {
+        this.listener.backFromJoinUsFragment(editTextMail,editTextPassword);
+        setFragment(detailsFragment);
+    }
+
     private void setNextBtn(View view) {
         nextBtn = view.findViewById(R.id.nextSignUpId);
         nextBtn.setOnClickListener(new View.OnClickListener() {
@@ -65,25 +85,10 @@ public class SignUp_Fragment extends Fragment {
                     Toast.makeText(getActivity(), "Sign up has Failed",Toast.LENGTH_SHORT).show();
                 }
                 else {
-                    onSignUpSuccess();
+                    listenerTrigger();
                 }
             }
         });
-    }
-    private void onSignUpSuccess() {
-        mAuth.createUserWithEmailAndPassword(editTextMail, editTextPassword)
-                .addOnCompleteListener(new OnCompleteListener<AuthResult>() {
-                    @Override
-                    public void onComplete(@NonNull Task<AuthResult> task) {
-                        if(task.isSuccessful()) {
-                            System.out.println("GOOOOOOOOOOOOOOOOOOOOOOOOOOOD");
-                        }
-                        else{
-                            System.out.println("not good : " + task.toString());
-                        }
-                    }
-                });
-
     }
     private void setFragment(Fragment fragment){
         FragmentTransaction ft = getFragmentManager().beginTransaction().addToBackStack(null);// when push the back btn we go back to the previous fragment

@@ -1,14 +1,83 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".Fragments.Recommendation_Fragment">
+    tools:context=".Fragments.Recommendation_Fragment"
+    android:background="@drawable/gradient_deep_space"
+    android:layoutDirection="ltr">
 
-    <!-- TODO: Update blank fragment layout -->
-    <TextView
+    <ScrollView
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:text="@string/hello_blank_fragment" />
+        android:layout_height="wrap_content"
+        android:id="@+id/scrollview"
+        >
 
-</FrameLayout>
+<LinearLayout
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_margin="20dp"
+    android:orientation="vertical">
+
+    <TextView
+        android:textSize="21sp"
+        android:text="Pie Chart"
+        android:textColor="@color/colorButtonLight"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+
+    <com.github.mikephil.charting.charts.PieChart
+        android:id="@+id/pie_chart_id"
+        android:layout_width="match_parent"
+        android:layout_height="300dp"
+        android:layout_gravity="center">
+
+    </com.github.mikephil.charting.charts.PieChart>
+    <TextView
+        android:textSize="21sp"
+        android:text="Line Chart"
+        android:textColor="@color/colorButtonLight"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+
+    <com.github.mikephil.charting.charts.LineChart
+        android:id="@+id/line_chart_id"
+        android:layout_width="match_parent"
+        android:layout_height="300dp"
+        android:layout_gravity="center">
+
+    </com.github.mikephil.charting.charts.LineChart>
+
+    <TextView
+        android:textSize="21sp"
+        android:text="Bar Chart"
+        android:textColor="@color/colorButtonLight"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+
+    <com.github.mikephil.charting.charts.BarChart
+        android:id="@+id/bar_chart_id"
+        android:layout_width="match_parent"
+        android:layout_height="300dp"
+        android:layout_gravity="center">
+
+    </com.github.mikephil.charting.charts.BarChart>
+
+
+
+    <TextView
+        android:textSize="21sp"
+        android:text="Lscsscsct\nsdvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvscsscsct\nsdvvvvvvaxaxaxaxaxax\
+ax
+axxaaxaxaxaxaxaxax"
+        android:textColor="@color/colorButtonLight"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+
+
+
+</LinearLayout>
+    </ScrollView>
+
+</RelativeLayout>
