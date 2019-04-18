@@ -27,6 +27,8 @@ import com.prolificinteractive.materialcalendarview.CalendarMode;
 import com.prolificinteractive.materialcalendarview.MaterialCalendarView;
 import com.prolificinteractive.materialcalendarview.OnDateSelectedListener;
 
+import org.json.JSONException;
+
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -58,13 +60,13 @@ public class Scheduler_Fragment extends Fragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        myService = new MyService(getContext());
+      //  myService = new MyService(getContext());
 
-
-        System.out.println("Before IsFulll");
-
-        myService.isFull("10:18:17:911");
-        System.out.println("After IsFulll");
+//        try {
+//            myService.isUserRegistered("10:23:38:741","zB98ExOolaPIuPqLrZav6YLBoOt2");
+//        } catch (JSONException e) {
+//            e.printStackTrace();
+//        }
 
         initFireBase();
         initRecyclerViewAndFireBaseRef();
