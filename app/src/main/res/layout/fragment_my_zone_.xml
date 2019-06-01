@@ -2,18 +2,21 @@
 <RelativeLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="350dp"
-    android:layout_height="100dp"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
     android:layout_gravity="center"
+    android:background="@drawable/gradient_deep_space"
     tools:context=".Fragments.MyZone_Fragment"
-    android:background="@color/colorPrimaryDark"
     android:layoutDirection="ltr">
 
 
-    <com.hsalf.smilerating.SmileRating
-        android:id="@+id/smile_rating"
-        android:layout_width="match_parent"
+    <Switch
+        android:id="@+id/switch1"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_centerVertical="true"/>
+        android:layout_centerInParent="true"
+
+        />
+
 
 </RelativeLayout>

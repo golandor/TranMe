@@ -1,5 +1,6 @@
 package com.example.golan.train.Fragments;
 
+import android.graphics.Color;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -22,6 +23,8 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
+import com.hsalf.smilerating.BaseRating;
+import com.hsalf.smilerating.SmileRating;
 import com.prolificinteractive.materialcalendarview.CalendarDay;
 import com.prolificinteractive.materialcalendarview.CalendarMode;
 import com.prolificinteractive.materialcalendarview.MaterialCalendarView;
@@ -48,7 +51,11 @@ public class Scheduler_Fragment extends Fragment {
 
     public Scheduler_Fragment() {
     }
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
 
+    }
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
@@ -60,26 +67,17 @@ public class Scheduler_Fragment extends Fragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-      //  myService = new MyService(getContext());
-
-//        try {
-//            myService.isUserRegistered("10:23:38:741","zB98ExOolaPIuPqLrZav6YLBoOt2");
-//        } catch (JSONException e) {
-//            e.printStackTrace();
-//        }
 
         initFireBase();
         initRecyclerViewAndFireBaseRef();
         initCalender();
-
-
     }
-    private void setFragment(Fragment fragment){
+
+    private void setFragment(Fragment fragment) {
         FragmentTransaction ft = getFragmentManager().beginTransaction().addToBackStack(null);// when push the back btn we go back to the previous fragment
-        ft.replace(R.id.placeholder,fragment);
+        ft.replace(R.id.placeholder, fragment);
         ft.commit();
     }
-
 
     public void initRecyclerViewAndFireBaseRef(){
         courseRecyclerView = view.findViewById(R.id.recyclerViewOnScheduler);
@@ -179,4 +177,7 @@ public class Scheduler_Fragment extends Fragment {
         });
         setQuery(strDate);
     }
+
+
+
 }
