@@ -11,6 +11,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.LinearLayout;
+import android.widget.RatingBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -24,6 +25,8 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import com.hsalf.smilerating.BaseRating;
+import com.hsalf.smilerating.SmileRating;
 
 import org.json.JSONException;
 
@@ -53,8 +56,10 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
     private MyViewHolder vHolder;
     private Calendar calendar;
     private SimpleDateFormat currentTimeToString,mdFormat;
-
     private MyService myService;
+    private SmileRating smileRating;
+  //  private RatingBar ratingBar;
+
 
     public RecyclerViewAdapter(Context mcContext, ArrayList<Course> mCourseList){
         this.mcContext = mcContext;
@@ -70,17 +75,16 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
         initFireBase();
         myService = new MyService(mcContext);
         course_status_on_scheduler = v.findViewById(R.id.courseStatusIdOnScheduler);
-
         setDialog(vHolder);
 
         return vHolder;
+
     }
 
     private void setTimeCheck() {
         currentTimeToString = new SimpleDateFormat("HH:mm:ss");
         String saveCurrentTimeToString = currentTimeToString.format(calendar.getTime());
     }
-
 
     private void set_dialog_course_status(final MyViewHolder vHolder, final String course_id){
         myRef.child(mcContext.getString(R.string.courses)).child(course_id)
@@ -138,7 +142,7 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
                         } catch (ParseException e) {
                             e.printStackTrace();
                         }
-                        finalCourseStatus = mcContext.getString(R.string.waitingList);
+                        finalCourseStatus = "Rate this course";
 
                         dialog_course_status.setText(finalCourseStatus);
                     }
@@ -148,6 +152,54 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
 
                     }
                 });
+    }
+
+    private void setSmileRatingOn() {
+        smileRating.setVisibility(View.VISIBLE);
+
+        smileRating.setTextSelectedColor(Color.GREEN);
+
+        smileRating.setNameForSmile(BaseRating.TERRIBLE, "Too Easy!");
+        smileRating.setNameForSmile(BaseRating.BAD, "Easy");
+        smileRating.setNameForSmile(BaseRating.OKAY, "Medium");
+        smileRating.setNameForSmile(BaseRating.GOOD, "Hard");
+        smileRating.setNameForSmile(BaseRating.GREAT, "Very Hard!");
+
+        smileRating.setOnSmileySelectionListener(new SmileRating.OnSmileySelectionListener() {
+            @Override
+            public void onSmileySelected(@BaseRating.Smiley int smiley, boolean reselected) {
+                // reselected is false when user selects different smiley that previously selected one
+                // true when the same smiley is selected.
+                // Except if it first time, then the value will be false.
+                switch (smiley) {
+
+                    case SmileRating.TERRIBLE:
+                        break;
+                    case SmileRating.BAD:
+                        break;
+                    case SmileRating.OKAY:
+                        break;
+                    case SmileRating.GOOD:
+                        break;
+                    case SmileRating.GREAT:
+                        break;
+                }
+            }
+        });
+
+        smileRating.setOnRatingSelectedListener(new SmileRating.OnRatingSelectedListener() {
+            @Override
+            public void onRatingSelected(int level, boolean reselected) {
+                // level is from 1 to 5 (0 when none selected)
+                // reselected is false when user selects different smiley that previously selected one
+                // true when the same smiley is selected.
+                // Except if it first time, then the value will be false.
+
+                Toast.makeText(mcContext,"Selected Rating" + level, Toast.LENGTH_SHORT).show();
+                myService.rateCourse(course_id,user_id,level);
+            }
+        });
+
     }
 
     private void setDialog(final MyViewHolder vHolder){
@@ -168,6 +220,9 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
                 final TextView dialog_coach_name = myDialog.findViewById(R.id.coachNameIdOnDetails);
                 TextView dialog_course_time = myDialog.findViewById(R.id.timeIdOnDetails);
                 dialog_course_status = myDialog.findViewById(R.id.courseStatusIdOnDetails);
+                smileRating = myDialog.findViewById(R.id.rate);
+                smileRating.setVisibility(View.INVISIBLE);
+
 
                 // taking the data from the vHolder for now // TODO: 02/01/2019 take from firebase
                 mCourseList.get(vHolder.getAdapterPosition()).setCourseLocation("Room 18");
@@ -190,7 +245,7 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
                                 .addListenerForSingleValueEvent(new ValueEventListener() {
                                     @Override
                                     public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                                        joinToWaitingList(vHolder, vHolder.getAdapterPosition());
+                                        //joinToWaitingList(vHolder, vHolder.getAdapterPosition());
 
                                        // isOnWaitingList(dataSnapshot);
                                         try {
@@ -207,13 +262,13 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
                                                 }
                                             }
                                             else{
-                                                if(dataSnapshot.child("registered").child(user_id).exists()) {
+                                               // if(dataSnapshot.child("registered").child(user_id).exists()) {
                                                     // The user is registered to this course
                                                     rateCourse(dataSnapshot);
-                                                }
-                                                else{
+                                               // }
+                                              //  else{
                                                     //TODO make nothing when clicked
-                                                }
+                                                //}
                                             }
                                         } catch (ParseException e) {
                                             e.printStackTrace();
@@ -233,10 +288,8 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
     }
 
     private void rateCourse(DataSnapshot dataSnapshot) {
-        // myDialog.setContentView(R.layout.fragment_my_zone_);
-        // myDialog.getWindow().setLayout(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.MATCH_PARENT);
-        //    myDialog.hide();
-        //  rateDialog.show();
+        setSmileRatingOn();
+        //System.out.println("RATE: " + ratingBar.getRating());
     }
 
     private boolean isFull(DataSnapshot dataSnapshot){
@@ -291,8 +344,8 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
                     System.out.println("CourseId: " + course_id + "user: " + myUser.getFullName());
                     //myService.addUserToWaitingList(course_id, myUser);
                     //myService.RemoveUserFromWaitingList(course_id, myUser);
-                    //myService.registerUserToCourse(course_id, myUser);
-                    myService.deleteUserFromCourse(course_id, user_id);
+                    myService.registerUserToCourse(course_id, myUser);
+                    //myService.deleteUserFromCourse(course_id, user_id);
 
                 } catch (JSONException e) {
                     e.printStackTrace();
@@ -398,9 +451,6 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
         myDialog.hide();
     }
 
-
-
-
     // here is the main scheduler screen
     @Override
     public void onBindViewHolder(@NonNull final MyViewHolder myViewHolder, int i) {
@@ -428,6 +478,8 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
         return user;
     }
 
+
+
     public static class MyViewHolder extends RecyclerView.ViewHolder{
 
         private LinearLayout course_on_scheduler;
@@ -443,6 +495,7 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
             coachName_on_scheduler =  itemView.findViewById(R.id.coachNameIdOnScheduler);
             time_on_scheduler = itemView.findViewById(R.id.timeIdOnScheduler);
             course_on_scheduler = itemView.findViewById(R.id.course_on_scheduler_id);
+
         }
     }
     public void initFireBase(){
