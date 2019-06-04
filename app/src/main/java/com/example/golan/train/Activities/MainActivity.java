@@ -47,7 +47,6 @@ public class MainActivity extends AppCompatActivity implements fromFragmentToMai
         signUpFragment = new SignUp_Fragment();
 
 
-
         FragmentManager fragmentManager = getSupportFragmentManager();
         FragmentTransaction ft = fragmentManager.beginTransaction();
         ft.replace(R.id.placeholder,logIn_Fragment);

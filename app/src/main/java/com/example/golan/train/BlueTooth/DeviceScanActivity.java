@@ -28,8 +28,12 @@ import java.util.ArrayList;
 
 public class DeviceScanActivity extends ListActivity{
 
+    private String userId;
+    private String courseId;
+    private String gender;
     private LeDeviceListAdapter mLeDeviceListAdapter;
     private BluetoothAdapter mBluetoothAdapter;
+    private BleSingleton myBleSingleton;
     private boolean mScanning;
     private Handler mHandler;
     private static final int PERMISSION_REQUEST_COARSE_LOCATION = 456;
@@ -40,9 +44,16 @@ public class DeviceScanActivity extends ListActivity{
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        System.out.println("getActionBar() = " + getActionBar());
-        System.out.println(" R.string.title_devices = " + R.string.title_devices);
-        getActionBar().setTitle(R.string.title_devices);
+        Intent i = getIntent();
+        courseId = i.getStringExtra("courseId");
+        userId = i.getStringExtra("userId");
+
+
+        myBleSingleton = BleSingleton.getInstance();
+        myBleSingleton.setCourseId(courseId);
+        myBleSingleton.setUserId(userId);
+
+
         mHandler = new Handler();
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             requestPermissions(new String[]{Manifest.permission.ACCESS_COARSE_LOCATION}, PERMISSION_REQUEST_COARSE_LOCATION);
