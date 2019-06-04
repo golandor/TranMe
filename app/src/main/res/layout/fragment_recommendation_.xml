@@ -22,7 +22,7 @@
 
     <TextView
         android:textSize="21sp"
-        android:text="Pie Chart"
+        android:text="@string/courses_taken_this_month"
         android:textColor="@color/colorButtonLight"
         android:layout_width="match_parent"
         android:layout_height="wrap_content" />
@@ -31,12 +31,13 @@
         android:id="@+id/pie_chart_id"
         android:layout_width="match_parent"
         android:layout_height="300dp"
-        android:layout_gravity="center">
+        android:layout_gravity="center"
+        android:layout_marginTop="20dp">
 
     </com.github.mikephil.charting.charts.PieChart>
     <TextView
         android:textSize="21sp"
-        android:text="Line Chart"
+        android:text="@string/weekly_heart_rate"
         android:textColor="@color/colorButtonLight"
         android:layout_width="match_parent"
         android:layout_height="wrap_content" />
@@ -45,28 +46,33 @@
         android:id="@+id/line_chart_id"
         android:layout_width="match_parent"
         android:layout_height="300dp"
-        android:layout_gravity="center">
+        android:layout_gravity="center"
+        android:layout_marginTop="20dp">
 
     </com.github.mikephil.charting.charts.LineChart>
 
     <TextView
         android:textSize="21sp"
-        android:text="Bar Chart"
+        android:text="@string/monthly_calorie_summary"
         android:textColor="@color/colorButtonLight"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"/>
 
     <com.github.mikephil.charting.charts.BarChart
         android:id="@+id/bar_chart_id"
         android:layout_width="match_parent"
         android:layout_height="300dp"
-        android:layout_gravity="center">
+        android:layout_gravity="center"
+        android:layout_marginTop="20dp"
+        >
 
     </com.github.mikephil.charting.charts.BarChart>
 
 
 
     <TextView
+        android:layout_marginTop="20dp"
         android:textSize="21sp"
         android:text="Lscsscsct\nsdvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvscsscsct\nsdvvvvvvaxaxaxaxaxax\
 ax

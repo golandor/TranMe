@@ -2,8 +2,10 @@ package com.example.golan.train.BL;
 
 import android.app.Dialog;
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
+import android.location.Geocoder;
 import android.support.annotation.NonNull;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
@@ -15,6 +17,7 @@ import android.widget.RatingBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.example.golan.train.BlueTooth.DeviceScanActivity;
 import com.example.golan.train.R;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
@@ -36,6 +39,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 
 public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapter.MyViewHolder> {
 
@@ -51,6 +55,7 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
     private DatabaseReference courseRegisterRef;
     private String course_id;
     private Button dialog_course_status;
+    private Button startTrainingBtn;
     private static TextView course_status_on_scheduler;
     private User user;
     private MyViewHolder vHolder;
@@ -93,12 +98,12 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
                     public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
 
 //                        if(dataSnapshot.child("registered").child(user_id).exists()) {
-                        try {
-                          //  System.out.println("before");
-                            //myService.rateCourse(course_id,user_id,3);
-
-                            if(myService.isUserRegistered(course_id,user_id)) {
-                                System.out.println("after");
+                       // try {
+//                            System.out.println("Before");
+//                            myService.registerUserToCourse(course_id,user);
+//                            System.out.println("After");
+                            if(myService.isDatePassed()) {
+                            //if(true){
                                 // The user is registered to this course
                                // finalCourseStatus =mcContext.getString(R.string.cancel_regisration);
                             }
@@ -124,9 +129,9 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
                                     finalCourseStatus = String.valueOf(currentNumOfUsersInCourse) + "/" + String.valueOf(maxNumberOfPeopleInCourse);
                                 }
 
-                            }
-                        } catch (JSONException e) {
-                            e.printStackTrace();
+                            //}
+                       // } //catch (JSONException e) {
+                           // e.printStackTrace();
                         }
                         // if date is passed
                         try {
@@ -142,7 +147,7 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
                         } catch (ParseException e) {
                             e.printStackTrace();
                         }
-                        finalCourseStatus = "Rate this course";
+                        //finalCourseStatus = "Rate this course";
 
                         dialog_course_status.setText(finalCourseStatus);
                     }
@@ -196,7 +201,7 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
                 // Except if it first time, then the value will be false.
 
                 Toast.makeText(mcContext,"Selected Rating" + level, Toast.LENGTH_SHORT).show();
-                myService.rateCourse(course_id,user_id,level);
+                //myService.rateCourse(course_id,user_id,level);
             }
         });
 
@@ -220,7 +225,13 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
                 final TextView dialog_coach_name = myDialog.findViewById(R.id.coachNameIdOnDetails);
                 TextView dialog_course_time = myDialog.findViewById(R.id.timeIdOnDetails);
                 dialog_course_status = myDialog.findViewById(R.id.courseStatusIdOnDetails);
+                startTrainingBtn = myDialog.findViewById(R.id.startTraining);
                 smileRating = myDialog.findViewById(R.id.rate);
+
+                //TODO
+                // startTrainingBtn setVisibility only at the right time
+
+
                 smileRating.setVisibility(View.INVISIBLE);
 
 
@@ -237,42 +248,54 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
 
                 course_id = mCourseList.get(vHolder.getAdapterPosition()).getCourseId();
                 set_dialog_course_status(vHolder,course_id);
+                setStartTrainingBtn(course_id);
+
 
                 dialog_course_status.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        myRef.child(mcContext.getString(R.string.courses)).child(course_id)
+                        myRef//.child(mcContext.getString(R.string.courses)).child(course_id)
                                 .addListenerForSingleValueEvent(new ValueEventListener() {
                                     @Override
                                     public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                                         //joinToWaitingList(vHolder, vHolder.getAdapterPosition());
 
-                                       // isOnWaitingList(dataSnapshot);
+                                        final User user1 = getUserByDataSnapshot(dataSnapshot);
                                         try {
-                                            if (!isDatePassed(dataSnapshot)) {
-                                                if ((!isFull(dataSnapshot)) && (!isUserRegistered(dataSnapshot))) {
+                                            System.out.println("Before");
+                                           boolean c =  myService.isUserRegistered(course_id,user1);
+                                            //myService.registerUserToCourse(course_id,user);
+                                            System.out.println("After "+c);
+                                        } catch (JSONException e) {
+                                            e.printStackTrace();
+                                        }
 
-                                                    saveRegisterDetails(vHolder.getAdapterPosition());
-                                                } else if (isUserRegistered(dataSnapshot)) {
-
-                                                    deleteUserFromCourse(vHolder, vHolder.getAdapterPosition());
-                                                } else if ((isFull(dataSnapshot)) && (!isUserRegistered(dataSnapshot)) && (!isOnWaitingList(dataSnapshot))) {
-
-                                                   // joinToWaitingList(vHolder, vHolder.getAdapterPosition());
-                                                }
-                                            }
-                                            else{
+                                       // isOnWaitingList(dataSnapshot);
+                                       // try {
+//                                            if (!isDatePassed(dataSnapshot)) {
+//                                                if ((!isFull(dataSnapshot)) && (!isUserRegistered(dataSnapshot))) {
+//
+//                                                   // saveRegisterDetails(vHolder.getAdapterPosition());
+//                                                } else if (isUserRegistered(dataSnapshot)) {
+//
+//                                                   // deleteUserFromCourse(vHolder, vHolder.getAdapterPosition());
+//                                                } else if ((isFull(dataSnapshot)) && (!isUserRegistered(dataSnapshot)) && (!isOnWaitingList(dataSnapshot))) {
+//
+//                                                   // joinToWaitingList(vHolder, vHolder.getAdapterPosition());
+//                                                }
+//                                            }
+//                                            else{
                                                // if(dataSnapshot.child("registered").child(user_id).exists()) {
                                                     // The user is registered to this course
-                                                    rateCourse(dataSnapshot);
+                                                    //rateCourse(dataSnapshot);
                                                // }
                                               //  else{
                                                     //TODO make nothing when clicked
                                                 //}
-                                            }
-                                        } catch (ParseException e) {
-                                            e.printStackTrace();
-                                        }
+                                            //}
+                                       // } catch (ParseException e) {
+                                       //     e.printStackTrace();
+                                       // }
                                     }
 
                                     @Override
@@ -286,6 +309,21 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
             }
         });
     }
+
+    private void setStartTrainingBtn(String CourseId){
+        startTrainingBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                Intent intent = new Intent(mcContext,DeviceScanActivity.class);
+                intent.putExtra("courseId",course_id);
+                intent.putExtra("userId",user_id);
+
+                mcContext.startActivity(intent);
+            }
+        });
+    }
+
 
     private void rateCourse(DataSnapshot dataSnapshot) {
         setSmileRatingOn();
@@ -477,8 +515,6 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
         user =  new User(fullName,user_id,gender,weigh,height);
         return user;
     }
-
-
 
     public static class MyViewHolder extends RecyclerView.ViewHolder{
 

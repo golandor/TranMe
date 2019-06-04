@@ -17,6 +17,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.golan.train.Activities.MainActivity;
+import com.example.golan.train.BlueTooth.DeviceScanActivity;
 import com.example.golan.train.R;
 import com.google.firebase.auth.FirebaseAuth;
 import com.hsalf.smilerating.BaseRating;
@@ -46,11 +47,18 @@ public class MyZone_Fragment extends Fragment {
         view = inflater.inflate(R.layout.fragment_my_zone_, container, false);
         firebaseAuth = FirebaseAuth.getInstance();
         aSwitch = view.findViewById(R.id.switch1);
-        //  aSwitch.setVisibility(View.VISIBLE);
-        // switchTextView = view.findViewById(R.id.)
-        //  setlogOutBtn();
-       // doSwitch();
 
+        //  setlogOutBtn();
+        aSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                if(isChecked==true)
+                {
+                    aSwitch.setChecked(false);
+                    startActivity(new Intent(getContext(), DeviceScanActivity.class));
+                }
+            }
+        });
         return view;
     }
 

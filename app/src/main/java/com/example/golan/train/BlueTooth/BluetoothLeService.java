@@ -16,6 +16,10 @@ import android.os.Binder;
 import android.os.IBinder;
 import android.util.Log;
 
+import com.example.golan.train.BL.MyService;
+
+import org.json.JSONException;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -27,6 +31,9 @@ public class BluetoothLeService extends Service {
     private BluetoothAdapter mBluetoothAdapter;
     private String mBluetoothDeviceAddress;
     private BluetoothGatt mBluetoothGatt;
+    private BleSingleton myBleSingleton;
+    private MyService myService;
+
     private int mConnectionState = STATE_DISCONNECTED;
     private int count = 0;
     private List<Integer> hrList = new ArrayList<>();
@@ -65,7 +72,11 @@ public class BluetoothLeService extends Service {
                         mBluetoothGatt.discoverServices());
 
             } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
-                System.out.println("in disconnect: " + hrList.toString());
+                try {
+                    writeHrList();
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
 
                 intentAction = ACTION_GATT_DISCONNECTED;
                 mConnectionState = STATE_DISCONNECTED;
@@ -123,13 +134,12 @@ public class BluetoothLeService extends Service {
                 Log.d(TAG, "Heart rate format UINT8.");
             }
             final int heartRate = characteristic.getIntValue(format, 1);
-            //System.out.println("Count: " + count);
-            count++;
-            if(count%15==0){
-                Log.d(TAG, String.format("Received heart rate: %d", heartRate));
+            //count++;
+           // if(count%30==0){
+               // Log.d(TAG, String.format("Received heart rate: %d", heartRate));
                 hrList.add(heartRate);
                 intent.putExtra(EXTRA_DATA, String.valueOf(heartRate));
-            }
+            //}
 
         } else {
             // For all other profiles, writes the data formatted in HEX.
@@ -160,7 +170,11 @@ public class BluetoothLeService extends Service {
         // After using a given device, you should make sure that BluetoothGatt.close() is called
         // such that resources are cleaned up properly.  In this particular example, close() is
         // invoked when the UI is disconnected from the Service.
-        close();
+        try {
+            close();
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
         return super.onUnbind(intent);
     }
 
@@ -252,17 +266,23 @@ public class BluetoothLeService extends Service {
      * After using a given BLE device, the app must call this method to ensure resources are
      * released properly.
      */
-    public void close() {
+    public void close() throws JSONException {
         if (mBluetoothGatt == null) {
 
             return;
         }
-
-        System.out.println("in disconnect: " + hrList.toString());
-
+        writeHrList();
 
         mBluetoothGatt.close();
         mBluetoothGatt = null;
+    }
+
+    public void writeHrList() throws JSONException {
+        myService = new MyService(this);
+        System.out.println("in disconnect: " + hrList.toString());
+        myBleSingleton = BleSingleton.getInstance();
+        myBleSingleton.setHrlist(hrList);
+        myService.writeHRList(myBleSingleton.getCourseId(),myBleSingleton.getUserId(), myBleSingleton.getHrlist());
     }
 
     /**

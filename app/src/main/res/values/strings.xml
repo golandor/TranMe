@@ -64,4 +64,7 @@
     <string name="menu_scan">Scan</string>
     <string name="menu_stop">Stop</string>
     <string name="rate">Rate</string>
+    <string name="monthly_calorie_summary">Weekly Calorie Summary</string>
+    <string name="weekly_heart_rate">Weekly Heart Rate</string>
+    <string name="courses_taken_this_month">Courses Taken This Month</string>
 </resources>
