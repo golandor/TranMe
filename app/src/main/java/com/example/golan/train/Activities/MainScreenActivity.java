@@ -1,20 +1,15 @@
 package com.example.golan.train.Activities;
 
 import android.content.Intent;
+import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.design.widget.BottomNavigationView;
-import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentTransaction;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
-import android.util.Log;
 import android.view.MenuItem;
-import android.widget.Toast;
 
 import com.example.golan.train.BL.ViewPagerAdapter;
 import com.example.golan.train.Fragments.MyZone_Fragment;
-import com.example.golan.train.Fragments.Profile_Fragment;
 import com.example.golan.train.Fragments.Recommendation_Fragment;
 import com.example.golan.train.Fragments.Scheduler_Fragment;
 import com.example.golan.train.R;

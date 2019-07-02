@@ -8,6 +8,8 @@ import android.graphics.drawable.ColorDrawable;
 import android.location.Geocoder;
 import android.support.annotation.NonNull;
 import android.support.v7.widget.RecyclerView;
+import android.text.method.ScrollingMovementMethod;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -43,6 +45,9 @@ import java.util.List;
 
 public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapter.MyViewHolder> {
 
+    private static final String TAG = "RecyclerViewAdapter";
+
+    private RecyclerViewAdapter mAdapter = this;
     private Context mcContext;
     private ArrayList<Course> mCourseList;
     private Dialog myDialog;
@@ -63,6 +68,7 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
     private SimpleDateFormat currentTimeToString,mdFormat;
     private MyService myService;
     private SmileRating smileRating;
+
   //  private RatingBar ratingBar;
 
 
@@ -91,77 +97,62 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
         String saveCurrentTimeToString = currentTimeToString.format(calendar.getTime());
     }
 
-    private void set_dialog_course_status(final MyViewHolder vHolder, final String course_id){
-        myRef.child(mcContext.getString(R.string.courses)).child(course_id)
-                .addListenerForSingleValueEvent(new ValueEventListener() {
-                    @Override
-                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+    private void set_dialog_course_status(final MyViewHolder vHolder, final String course_id) {
+        myRef.child(mcContext.getString(R.string.courses)).child(course_id).addListenerForSingleValueEvent(new ValueEventListener() {
+           @Override
+           public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+//               if i want to use this 2 lines i should make the eventListener on myRef
+//               final User myUser;
+//               myUser = getUserByDataSnapshot(dataSnapshot);
 
-//                        if(dataSnapshot.child("registered").child(user_id).exists()) {
-                       // try {
-//                            System.out.println("Before");
-//                            myService.registerUserToCourse(course_id,user);
-//                            System.out.println("After");
-                            if(myService.isDatePassed()) {
-                            //if(true){
-                                // The user is registered to this course
-                               // finalCourseStatus =mcContext.getString(R.string.cancel_regisration);
-                            }
-                            else{
-                                if(isFull(dataSnapshot)){
-                                    if(!isOnWaitingList(dataSnapshot)) {
-                                        // join to waiting list
-                                        finalCourseStatus = mcContext.getString(R.string.waitingList);
-                                    }
-                                    else{
-                                        try {
-                                            int numOfUserOnWaitingList = Integer.parseInt(dataSnapshot.child(mcContext.getString(R.string.waitingListOnFB)).child(user_id)
-                                                    .child("position").getValue().toString());
-                                            finalCourseStatus = " Your place is: " + String.valueOf(numOfUserOnWaitingList);
-                                        }catch (Exception e){
-                                            e.printStackTrace();
-                                        }
-                                    }
-                                }
-                                else{
-                                    // The course is not full
-                                    //  System.out.println("here: " +  String.valueOf(currentNumOfUsersInCourse) + "/" + String.valueOf(maxNumberOfPeopleInCourse));
-                                    finalCourseStatus = String.valueOf(currentNumOfUsersInCourse) + "/" + String.valueOf(maxNumberOfPeopleInCourse);
-                                }
+               try {
+                   if(isCurrentDate(dataSnapshot)&&(isUserRegistered(dataSnapshot))){
+                           startTrainingBtn.setVisibility(View.VISIBLE);
+                   }else{
+                       startTrainingBtn.setVisibility(View.INVISIBLE);
+                   }
+                   if(!isDatePassed(dataSnapshot)){
+                       if(!isFull(dataSnapshot)){
+                           if(!isUserRegistered(dataSnapshot)){
+                               finalCourseStatus = (currentNumOfUsersInCourse) + "/" + (maxNumberOfPeopleInCourse);
+                           }else{  // isUserRegistered() is TRUE
+                               finalCourseStatus = mcContext.getString(R.string.cancel_regisration);
+                           }
+                       }else{  //  isFull() is TRUE
+                           if(!isUserRegistered(dataSnapshot)){
+                               if(!isOnWaitingList(dataSnapshot)){
+                                   finalCourseStatus = mcContext.getString(R.string.waitingList);
+                               }else{  // isOnWaitingList is TRUE
+                                   int numOfUserOnWaitingList = Integer.parseInt(dataSnapshot.child(mcContext.getString(R.string.waitingListOnFB)).child(user_id)
+                                           .child("position").getValue().toString());
+                                   finalCourseStatus = " Your place is: " + String.valueOf(numOfUserOnWaitingList);
+                               }
+                           }else{  // isUserRegistered() is TRUE
+                               finalCourseStatus = mcContext.getString(R.string.cancel_regisration);
+                           }
+                       }
+                   }else{  //  isDatePassed() is TRUE
+                       if(!isUserRegistered(dataSnapshot)){
+                           finalCourseStatus = "";
+                       }else{  // isUserRegistered() is TRUE
+                           finalCourseStatus = mcContext.getString(R.string.rateCourse);
+                       }
+                   }
+               } catch (ParseException e) {
+                   e.printStackTrace();
+               }
+               dialog_course_status.setText(finalCourseStatus);
+           }
 
-                            //}
-                       // } //catch (JSONException e) {
-                           // e.printStackTrace();
-                        }
-                        // if date is passed
-                        try {
-                            if(isDatePassed(dataSnapshot)){
-                                if(dataSnapshot.child("registered").child(user_id).exists()) {
-                                    // The user is registered to this course
-                                    finalCourseStatus = "Rate this course";
-                                }
-                                else{
-                                    finalCourseStatus ="";
-                                }
-                            }
-                        } catch (ParseException e) {
-                            e.printStackTrace();
-                        }
-                        //finalCourseStatus = "Rate this course";
+           @Override
+           public void onCancelled(@NonNull DatabaseError databaseError) {
 
-                        dialog_course_status.setText(finalCourseStatus);
-                    }
-
-                    @Override
-                    public void onCancelled(@NonNull DatabaseError databaseError) {
-
-                    }
-                });
+           }
+       });
     }
 
-    private void setSmileRatingOn() {
+    private void setSmileRatingOn(final String course_id, final User user) {
         smileRating.setVisibility(View.VISIBLE);
-
         smileRating.setTextSelectedColor(Color.GREEN);
 
         smileRating.setNameForSmile(BaseRating.TERRIBLE, "Too Easy!");
@@ -195,20 +186,17 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
         smileRating.setOnRatingSelectedListener(new SmileRating.OnRatingSelectedListener() {
             @Override
             public void onRatingSelected(int level, boolean reselected) {
-                // level is from 1 to 5 (0 when none selected)
-                // reselected is false when user selects different smiley that previously selected one
-                // true when the same smiley is selected.
-                // Except if it first time, then the value will be false.
-
-                Toast.makeText(mcContext,"Selected Rating" + level, Toast.LENGTH_SHORT).show();
-                //myService.rateCourse(course_id,user_id,level);
+                try {
+                    myService.rateCourse(course_id,user,level);
+                    myDialog.hide();
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
             }
         });
-
     }
 
     private void setDialog(final MyViewHolder vHolder){
-
         myDialog = new Dialog(mcContext);
         myDialog.setContentView(R.layout.fragment_course__details_);
         myDialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
@@ -221,6 +209,8 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
                 TextView dialog_course_name = myDialog.findViewById(R.id.courseNameOnCourseDetails);
                 TextView dialog_course_location = myDialog.findViewById(R.id.courseLocationOnCourseDetails);
                 TextView dialog_course_description = myDialog.findViewById(R.id.descriptionOnCourseDetails);
+                dialog_course_description.setMovementMethod(new ScrollingMovementMethod());
+
                 TextView dialog_course_name2 = myDialog.findViewById(R.id.courseNameOnCourseDetails2);
                 final TextView dialog_coach_name = myDialog.findViewById(R.id.coachNameIdOnDetails);
                 TextView dialog_course_time = myDialog.findViewById(R.id.timeIdOnDetails);
@@ -231,17 +221,16 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
                 //TODO
                 // startTrainingBtn setVisibility only at the right time
 
-
+                startTrainingBtn.setVisibility(View.INVISIBLE);
                 smileRating.setVisibility(View.INVISIBLE);
 
 
                 // taking the data from the vHolder for now // TODO: 02/01/2019 take from firebase
-                mCourseList.get(vHolder.getAdapterPosition()).setCourseLocation("Room 18");
-                // mCourseList.get(vHolder.getAdapterPosition()).setCourseDescription("Spinning is a brand of indoor bicycles and indoor cycling instruction classes" +
-                //      " distributed and licensed by the American health and fitness company Mad Dog Athletics.");
+               // mCourseList.get(vHolder.getAdapterPosition()).setCourseLocation("Room 18");
+                dialog_course_location.setText(mCourseList.get(vHolder.getAdapterPosition()).getCourseLocation());
                 dialog_course_name.setText(mCourseList.get(vHolder.getAdapterPosition()).getCourseName());
                 dialog_course_location.setText(mCourseList.get(vHolder.getAdapterPosition()).getCourseLocation());
-                // dialog_course_description.setText(mCourseList.get(vHolder.getAdapterPosition()).getCourseDescription());
+                dialog_course_description.setText(mCourseList.get(vHolder.getAdapterPosition()).getDescription());
                 dialog_course_name2.setText(mCourseList.get(vHolder.getAdapterPosition()).getCourseName());
                 dialog_coach_name.setText(mCourseList.get(vHolder.getAdapterPosition()).getTrainerName());
                 dialog_course_time.setText(mCourseList.get(vHolder.getAdapterPosition()).getTime());
@@ -258,49 +247,50 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
                                 .addListenerForSingleValueEvent(new ValueEventListener() {
                                     @Override
                                     public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                                        //joinToWaitingList(vHolder, vHolder.getAdapterPosition());
-
                                         final User user1 = getUserByDataSnapshot(dataSnapshot);
+                                        DataSnapshot snap = dataSnapshot.child(mcContext.getString(R.string.courses)).child(course_id);
                                         try {
-                                            System.out.println("Before");
-                                           boolean c =  myService.isUserRegistered(course_id,user1);
-                                            //myService.registerUserToCourse(course_id,user);
-                                            System.out.println("After "+c);
+                                            if(!isDatePassed(snap)){
+                                                if(!isFull(snap)){
+                                                    if(!isUserRegistered(snap)){
+                                                        myService.registerUserToCourse(mAdapter, course_id,user1);
+                                                        currentNumOfUsersInCourse = Integer.parseInt(snap.child("currentNumOfUsersInCourse").getValue().toString());
+                                                        //myService.setCurrentNumOfUsersRegisteredToCourse(course_id,currentNumOfUsersInCourse + 1);
+                                                        myDialog.hide();
+                                                    }else{  // isUserRegistered() is TRUE
+                                                        myService.deleteUserFromCourse(course_id,user1);
+                                                        currentNumOfUsersInCourse = Integer.parseInt(snap.child("currentNumOfUsersInCourse").getValue().toString());
+                                                        //myService.setCurrentNumOfUsersRegisteredToCourse(course_id,currentNumOfUsersInCourse - 1);
+                                                        myDialog.hide();
+                                                    }
+                                                }else{  //  isFull() is TRUE
+                                                    if(!isUserRegistered(snap)){
+                                                        if(!isOnWaitingList(snap)){
+                                                            myService.addUserToWaitingList(course_id,user1);
+                                                            myDialog.hide();
+                                                        }else{  // isOnWaitingList is TRUE
+                                                            // TODO delete from waiting list
+                                                        }
+                                                    }else{  // isUserRegistered() is TRUE
+                                                        myService.deleteUserFromCourse(course_id,user1);
+                                                        currentNumOfUsersInCourse = Integer.parseInt(snap.child("currentNumOfUsersInCourse").getValue().toString());
+                                                        //myService.setCurrentNumOfUsersRegisteredToCourse(course_id,currentNumOfUsersInCourse - 1);
+                                                        myDialog.hide();
+                                                    }
+                                                }
+                                            }else{  //  isDatePassed() is TRUE
+                                                if(isUserRegistered(snap)){
+                                                    setSmileRatingOn(course_id,user1);
+                                                }
+                                            }
+                                        } catch (ParseException e) {
+                                            e.printStackTrace();
                                         } catch (JSONException e) {
                                             e.printStackTrace();
                                         }
-
-                                       // isOnWaitingList(dataSnapshot);
-                                       // try {
-//                                            if (!isDatePassed(dataSnapshot)) {
-//                                                if ((!isFull(dataSnapshot)) && (!isUserRegistered(dataSnapshot))) {
-//
-//                                                   // saveRegisterDetails(vHolder.getAdapterPosition());
-//                                                } else if (isUserRegistered(dataSnapshot)) {
-//
-//                                                   // deleteUserFromCourse(vHolder, vHolder.getAdapterPosition());
-//                                                } else if ((isFull(dataSnapshot)) && (!isUserRegistered(dataSnapshot)) && (!isOnWaitingList(dataSnapshot))) {
-//
-//                                                   // joinToWaitingList(vHolder, vHolder.getAdapterPosition());
-//                                                }
-//                                            }
-//                                            else{
-                                               // if(dataSnapshot.child("registered").child(user_id).exists()) {
-                                                    // The user is registered to this course
-                                                    //rateCourse(dataSnapshot);
-                                               // }
-                                              //  else{
-                                                    //TODO make nothing when clicked
-                                                //}
-                                            //}
-                                       // } catch (ParseException e) {
-                                       //     e.printStackTrace();
-                                       // }
                                     }
-
                                     @Override
                                     public void onCancelled(@NonNull DatabaseError databaseError) {
-
                                     }
                                 });
                     }
@@ -324,22 +314,13 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
         });
     }
 
-
-    private void rateCourse(DataSnapshot dataSnapshot) {
-        setSmileRatingOn();
-        //System.out.println("RATE: " + ratingBar.getRating());
-    }
-
     private boolean isFull(DataSnapshot dataSnapshot){
-        //TODO Check if it is ok!!
-        //  boolean result = myService.isFull(dataSnapshot.child("courseId").getValue().toString());
-        //  currentNumOfUsersInCourse = Integer.parseInt(dataSnapshot.child("courseStatusBtnText").getValue().toString());
-        //  maxNumberOfPeopleInCourse = Integer.parseInt(dataSnapshot.child("maxNumOfUsersInCourse").getValue().toString());
-
-        //  if (currentNumOfUsersInCourse == maxNumberOfPeopleInCourse) {
-        //      return true;
-        //  }
-        return true;
+          currentNumOfUsersInCourse = Integer.parseInt(dataSnapshot.child("currentNumOfUsersInCourse").getValue().toString());
+          maxNumberOfPeopleInCourse = Integer.parseInt(dataSnapshot.child("maxNumOfUsersInCourse").getValue().toString());
+          if (currentNumOfUsersInCourse == maxNumberOfPeopleInCourse) {
+              return true;
+          }
+        return false;
     }
     private boolean isOnWaitingList(DataSnapshot dataSnapshot){
 //        boolean result = myService.isOnWaitingList(dataSnapshot.child("courseId").getValue().toString());
@@ -370,123 +351,35 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
         return false;
     }
 
-    private void joinToWaitingList(final MyViewHolder myViewHolder,final int position) {
-        myRef.addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-//                        if(!dataSnapshot.child(mcContext.getString(R.string.courses)).child(course_id)
-//                                .child(mcContext.getString(R.string.waitingListOnFB)).child(user_id).exists()) {
+    private boolean isCurrentDate(DataSnapshot dataSnapshot) throws ParseException {
+        calendar = Calendar.getInstance();
+        mdFormat = new SimpleDateFormat("dd-MM-yyyy");
+        String currentDate = mdFormat.format(calendar.getTime());
+        String courseDate = dataSnapshot.child("date").getValue().toString();
+        Date current_Date = mdFormat.parse(currentDate);
+        Date course_Date = mdFormat.parse(courseDate);
 
-                final User myUser = getUserByDataSnapshot(dataSnapshot);
-                try {
-                    System.out.println("CourseId: " + course_id + "user: " + myUser.getFullName());
-                    //myService.addUserToWaitingList(course_id, myUser);
-                    //myService.RemoveUserFromWaitingList(course_id, myUser);
-                    myService.registerUserToCourse(course_id, myUser);
-                    //myService.deleteUserFromCourse(course_id, user_id);
-
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                }
-
-//                            String pos = String.valueOf(dataSnapshot.child(mcContext.getString(R.string.courses)).child(course_id)
-//                                    .child(mcContext.getString(R.string.waitingListOnFB)).getChildrenCount() + 1);
-//
-//                            HashMap eventMap = new HashMap();
-//                            eventMap.put("user_id", myUser.getUser_id());
-//                            eventMap.put("full_name", myUser.getFullName());
-//                            eventMap.put("position",pos);
-//
-//                            courseRegisterRef.child(course_id).child(mcContext.getString(R.string.waitingListOnFB)).child(user_id)
-//                                    .updateChildren(eventMap).addOnCompleteListener(new OnCompleteListener() {
-//                                @Override
-//                                public void onComplete(@NonNull Task task) {
-//                                    Toast.makeText(mcContext,"In Waiting List",Toast.LENGTH_SHORT).show();
-//                                }
-//                            });
-            }
-            //                    }
-            @Override
-            public void onCancelled(@NonNull DatabaseError databaseError) {
-
-            }
-        });
-        myDialog.hide();
+        if (course_Date.compareTo(current_Date) == 0) {
+            return true;
+        }
+        return false;
     }
 
-    private void deleteUserFromCourse(final MyViewHolder myViewHolder,final int position) {
-        myRef.addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                if (dataSnapshot.exists()) {
-                    currentNumOfUsersInCourse =  Integer.parseInt(dataSnapshot
-                            .child(mcContext.getString(R.string.courses)).child(course_id).child("currentNumOfUsersInCourse")
-                            .getValue().toString());
-                    currentNumOfUsersInCourse--;
-
-                    myRef.child(mcContext.getString(R.string.courses)).child(course_id).child("currentNumOfUsersInCourse").setValue(String.valueOf(currentNumOfUsersInCourse));
-                    myDialog.hide();
-                    // update the list that the user was deleted
-                    mCourseList.get(position).setCurrentNumOfUsersInCourse(String.valueOf(currentNumOfUsersInCourse));
-                    dataSnapshot.child(mcContext.getString(R.string.courses)).child(course_id).child("registered")
-                            .child(user_id).getRef().removeValue();
-                    Toast.makeText(mcContext,"Cancel Registration ",Toast.LENGTH_SHORT).show();
-
-                }
-            }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError databaseError) {
-
-            }
-        });
+    public void onIsUserRegister(boolean isRegistered) {
+        Log.d(TAG, "onIsUserRegister: " + isRegistered);
     }
+    public void onIsDatePassed(boolean isDatePassed) {
+        Log.d(TAG, "onIsDatePassed: " + isDatePassed);
+    }
+    public void onIsFull(boolean isFull) {
+        Log.d(TAG, "onIsFull: " + isFull);
+    }
+    public void onRegisterUserToCourseFromMyService(boolean isRegisterSuccesfuly) throws JSONException {
 
-    private void saveRegisterDetails(final int position) {
-
-        myRef.addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                if (dataSnapshot.exists()) {
-                    if(!dataSnapshot.child(mcContext.getString(R.string.courses)).child(course_id).child("registered").child(user_id).exists()){
-
-                        User myUser = getUserByDataSnapshot(dataSnapshot);
-                        HashMap eventMap = new HashMap();
-                        eventMap.put("user_id", myUser.getUser_id());
-                        eventMap.put("full_name", myUser.getFullName());
-
-                        courseRegisterRef.child(course_id).child("registered").child(user_id)
-                                .updateChildren(eventMap).addOnCompleteListener(new OnCompleteListener() {
-                            @Override
-                            public void onComplete(@NonNull Task task) {
-                                courseRegisterRef.child(course_id).child("currentNumOfUsersInCourse").addListenerForSingleValueEvent(new ValueEventListener() {
-                                    @Override
-                                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                                        currentNumOfUsersInCourse = Integer.parseInt(dataSnapshot.getValue().toString());
-                                        currentNumOfUsersInCourse++;
-                                        courseRegisterRef.child(course_id).child("currentNumOfUsersInCourse").setValue(String.valueOf(currentNumOfUsersInCourse));
-
-                                        // update the list that the user was registered
-                                        mCourseList.get(position).setCurrentNumOfUsersInCourse(String.valueOf(currentNumOfUsersInCourse));
-                                        Toast.makeText(mcContext,"Registered Successfully ",Toast.LENGTH_SHORT).show();
-//                                            jsonParse();
-                                    }
-                                    @Override
-                                    public void onCancelled(@NonNull DatabaseError databaseError) {
-                                    }
-                                });
-                            }
-                        });
-                    }
-                }
-            }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError databaseError) {
-
-            }
-        });
-        myDialog.hide();
+       // myService.setCurrentNumOfUsersRegisteredToCourse(course_id,currentNumOfUsersInCourse + 1);
+    }
+    public void onIsOnWaitingList(boolean isOnWaitingList) {
+        Log.d(TAG, "onIsOnWaitingList: " + isOnWaitingList);
     }
 
     // here is the main scheduler screen
@@ -510,9 +403,10 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
     public User getUserByDataSnapshot(DataSnapshot dataSnapshot){
         String fullName = dataSnapshot.child(mcContext.getString(R.string.users)).child(user_id).child("fullName").getValue().toString();
         String gender = dataSnapshot.child(mcContext.getString(R.string.users)).child(user_id).child("gender").getValue().toString();
-        double height = Double.valueOf(dataSnapshot.child(mcContext.getString(R.string.users)).child(user_id).child("height").getValue().toString());
+        int age = Integer.valueOf(dataSnapshot.child(mcContext.getString(R.string.users)).child(user_id).child("age").getValue().toString());
         double weigh = Double.valueOf(dataSnapshot.child(mcContext.getString(R.string.users)).child(user_id).child("weigh").getValue().toString());
-        user =  new User(fullName,user_id,gender,weigh,height);
+        long userNumber = Long.parseLong(dataSnapshot.child(mcContext.getString(R.string.users)).child(user_id).child("userNumber").getValue().toString());
+        user =  new User(fullName,user_id,gender,weigh,age,userNumber);
         return user;
     }
 
@@ -523,7 +417,6 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
         private TextView coachName_on_scheduler;
         private TextView time_on_scheduler;
 
-
         public MyViewHolder(@NonNull View itemView) {
             super(itemView);
 
@@ -531,7 +424,6 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
             coachName_on_scheduler =  itemView.findViewById(R.id.coachNameIdOnScheduler);
             time_on_scheduler = itemView.findViewById(R.id.timeIdOnScheduler);
             course_on_scheduler = itemView.findViewById(R.id.course_on_scheduler_id);
-
         }
     }
     public void initFireBase(){
@@ -545,4 +437,6 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
         user_id = user.getUid();
         courseRegisterRef = FirebaseDatabase.getInstance().getReference(mcContext.getString(R.string.courses));
     }
+
+
 }

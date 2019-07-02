@@ -19,7 +19,6 @@
     <string name="birth_date">Birth Date</string>
     <string name="full_name">Full Name</string>
     <string name="weigh">Weigh</string>
-    <string name="height">Height</string>
     <string name="my_zone">My Zone</string>
     <string name="home">Home</string>
     <string name="profile">Profile</string>
@@ -64,7 +63,9 @@
     <string name="menu_scan">Scan</string>
     <string name="menu_stop">Stop</string>
     <string name="rate">Rate</string>
-    <string name="monthly_calorie_summary">Weekly Calorie Summary</string>
-    <string name="weekly_heart_rate">Weekly Heart Rate</string>
-    <string name="courses_taken_this_month">Courses Taken This Month</string>
+    <string name="monthly_calorie_summary">Last 7 Courses Calorie Summary</string>
+    <string name="weekly_heart_rate">Last 4 Courses Heart Rate</string>
+    <string name="courses_taken_this_month">Last 30 Courses Taken</string>
+    <string name="age">Age</string>
+    <string name="rateCourse">Rate this course</string>
 </resources>

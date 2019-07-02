@@ -1,9 +1,11 @@
 package com.example.golan.train.Fragments;
 
 import android.graphics.Color;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.annotation.RequiresApi;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v7.widget.LinearLayoutManager;
@@ -14,6 +16,7 @@ import android.view.ViewGroup;
 import android.widget.Toast;
 
 import com.example.golan.train.BL.Course;
+import com.example.golan.train.BL.GraphData;
 import com.example.golan.train.BL.MyService;
 import com.example.golan.train.BL.RecyclerViewAdapter;
 import com.example.golan.train.R;
@@ -35,19 +38,20 @@ import org.json.JSONException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.stream.Collectors;
 
 public class Scheduler_Fragment extends Fragment {
 
     View view;
     private MaterialCalendarView materialCalendarView;
-    private DatabaseReference myRef;
     private DatabaseReference courseRef;
     private RecyclerView courseRecyclerView;
     private ArrayList<Course> list;
     private RecyclerViewAdapter adapter;
     private LinearLayoutManager mLayoutManager;
 
-    private MyService myService;
 
     public Scheduler_Fragment() {
     }
@@ -67,10 +71,10 @@ public class Scheduler_Fragment extends Fragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-
-        initFireBase();
+        list = new ArrayList<>();
         initRecyclerViewAndFireBaseRef();
         initCalender();
+
     }
 
     private void setFragment(Fragment fragment) {
@@ -85,11 +89,10 @@ public class Scheduler_Fragment extends Fragment {
         courseRecyclerView.setLayoutManager(mLayoutManager);
         mLayoutManager.setReverseLayout(true);
         mLayoutManager.setStackFromEnd(true);
-        list = new ArrayList<>();
+//        list = new ArrayList<>();
+        courseRef = FirebaseDatabase.getInstance().getReference().child(getString(R.string.courses));
         adapter = new RecyclerViewAdapter(getContext(), list);
         courseRecyclerView.setAdapter(adapter);
-        courseRef = FirebaseDatabase.getInstance().getReference().child(getString(R.string.courses));
-
         courseRef.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
@@ -107,35 +110,31 @@ public class Scheduler_Fragment extends Fragment {
     private void setQuery(String myDate) {
         Query query = courseRef.orderByChild("date").equalTo(myDate);
         query.addListenerForSingleValueEvent(valueEventListener);
+
     }
 
-    ValueEventListener valueEventListener = new ValueEventListener() {
+    final ValueEventListener valueEventListener = new ValueEventListener() {
+        //        @RequiresApi(api = Build.VERSION_CODES.N)
         @Override
         public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
             if (dataSnapshot.exists()) {
                 list.clear();
-                for (DataSnapshot dataSnapshot1 : dataSnapshot.getChildren()
-                        ) {
+                for (DataSnapshot dataSnapshot1 : dataSnapshot.getChildren()) {
                     Course course = dataSnapshot1.getValue(Course.class);
                     list.add(course);
                 }
-            }
-            else{
+                // sorting the list of courses by time
+                Collections.sort(list, (s1, s2) -> s2.getTime().compareTo(s1.getTime()));
+            } else {
                 list.clear();
             }
             adapter.notifyDataSetChanged();
-
         }
         @Override
         public void onCancelled(@NonNull DatabaseError databaseError) {
-            Toast.makeText(getContext(),"Something went wrong",Toast.LENGTH_SHORT).show();
+            Toast.makeText(getContext(), "Something went wrong", Toast.LENGTH_SHORT).show();
         }
     };
-
-    public void initFireBase() {
-        // myRef is just for write to fireBase
-        myRef = FirebaseDatabase.getInstance().getReference();
-    }
 
     @Override
     public void onStart() {

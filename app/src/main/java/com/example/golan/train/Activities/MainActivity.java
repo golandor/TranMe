@@ -9,6 +9,7 @@ import android.os.Bundle;
 import android.util.Log;
 import android.widget.Toast;
 
+import com.example.golan.train.BL.MyService;
 import com.example.golan.train.BL.User;
 import com.example.golan.train.Fragments.LogIn_Fragment;
 import com.example.golan.train.Fragments.SignUp_Fragment;
@@ -22,6 +23,8 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.messaging.FirebaseMessaging;
 
+import org.json.JSONException;
+
 public class MainActivity extends AppCompatActivity implements fromFragmentToMainActivity {
 
     private LogIn_Fragment logIn_Fragment;
@@ -29,28 +32,32 @@ public class MainActivity extends AppCompatActivity implements fromFragmentToMai
     private FirebaseAuth firebaseAuth;
     private DatabaseReference myRef;
     private FirebaseDatabase mFirebaseDatabase;
+    private MyService myService;
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        
-        firebaseAuth = FirebaseAuth.getInstance();
+        myService = new MyService(this);
+        initFireBase();
+
 
         if(firebaseAuth.getCurrentUser() != null){
-            finish();
+
             startActivity(new Intent(getApplicationContext(),MainScreenActivity.class));
+            finish();
+        }else{
+
+            logIn_Fragment = new LogIn_Fragment();
+            signUpFragment = new SignUp_Fragment();
+
+
+            FragmentManager fragmentManager = getSupportFragmentManager();
+            FragmentTransaction ft = fragmentManager.beginTransaction();
+            ft.replace(R.id.placeholder,logIn_Fragment);
+            ft.commit();
         }
-
-        logIn_Fragment = new LogIn_Fragment();
-        signUpFragment = new SignUp_Fragment();
-
-
-        FragmentManager fragmentManager = getSupportFragmentManager();
-        FragmentTransaction ft = fragmentManager.beginTransaction();
-        ft.replace(R.id.placeholder,logIn_Fragment);
-        ft.commit();
     }
 
 
@@ -60,26 +67,28 @@ public class MainActivity extends AppCompatActivity implements fromFragmentToMai
 
     @Override
     public void backFromJoinUsFragment(String mail,String password) {
+        System.out.println("in backFromJoinUsFragment");
         signUpNewUserWithEmailPass(mail,password);
     }
     @Override
-    public void backFromDetailsFragment(User user) {
+    public void backFromDetailsFragment(User user) throws JSONException {
         writeNewUser(user);
     }
 
-    private void writeNewUser(User user) {
-        myRef.child("Users").child(user.getUser_id()).setValue(user);
+    private void writeNewUser(User user) throws JSONException {
+        myService.signUpNewUser(user);
     }
 
 
     public void initFireBase() {
+
         firebaseAuth = FirebaseAuth.getInstance();
         mFirebaseDatabase = FirebaseDatabase.getInstance();
         myRef = FirebaseDatabase.getInstance().getReference();
     }
 
     private void signUpNewUserWithEmailPass(String mail, String password) {
-        initFireBase();
+        System.out.println("in signUpNewUserWithEmailPass");
         firebaseAuth.createUserWithEmailAndPassword(mail,password)
                 .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
                     @Override
@@ -88,8 +97,7 @@ public class MainActivity extends AppCompatActivity implements fromFragmentToMai
                                 .addOnCompleteListener(new OnCompleteListener<Void>() {
                                     @Override
                                     public void onComplete(@NonNull Task<Void> task) {
-                                        Toast.makeText(MainActivity.this, "OK",Toast.LENGTH_SHORT).show();
-
+                                        System.out.println("complete");
                                     }
                                 });
                         if(!task.isSuccessful()) {

@@ -80,7 +80,7 @@ public class LogIn_Fragment extends Fragment {
     }
 
     private void setFragment(Fragment fragment) {
-        FragmentTransaction ft = getFragmentManager().beginTransaction().addToBackStack(null);// when push the back btn we go back to the previous fragment
+        FragmentTransaction ft = getFragmentManager().beginTransaction();//.addToBackStack(null);// when push the back btn we go back to the previous fragment
         ft.replace(R.id.placeholder, fragment);
         ft.commit();
     }

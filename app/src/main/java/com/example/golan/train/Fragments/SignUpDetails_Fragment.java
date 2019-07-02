@@ -25,13 +25,16 @@ import com.example.golan.train.R;
 import com.google.firebase.auth.FirebaseAuth;
 
 
+import org.json.JSONException;
+
 import java.util.Calendar;
 
 public class SignUpDetails_Fragment extends Fragment {
 
-    private EditText et_fullName, et_weigh, et_height;
+    private EditText et_fullName, et_weigh, et_age;
     private String editTextFullName;
-    private double weigh, height;
+    private double weigh;
+    private int age;
     private Button regBtn;
     private TextView mDisplayDate;
     private DatePickerDialog.OnDateSetListener mDateSetListener;
@@ -43,6 +46,8 @@ public class SignUpDetails_Fragment extends Fragment {
     private FirebaseAuth mAuth;
     private View v1;
     public fromFragmentToMainActivity listener;
+    private String myMail;
+    private String myPass;
 
     public SignUpDetails_Fragment() {
     }
@@ -51,6 +56,7 @@ public class SignUpDetails_Fragment extends Fragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         mAuth = FirebaseAuth.getInstance();
+
     }
 
     @Override
@@ -59,7 +65,20 @@ public class SignUpDetails_Fragment extends Fragment {
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_sign_up_details_, container, false);
         logIn_fragment = new LogIn_Fragment();
-
+        Bundle bundle = getArguments();
+        if (bundle != null)
+        {
+            myMail = bundle.getString("mail");
+            myPass = bundle.getString("password:");
+            try {
+                listenerTriggerForSignUpUser();
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        }
+        else{
+            System.out.println("null is null man");
+        }
         mDisplayDate = view.findViewById(R.id.birthDate);
         radio_group = view.findViewById(R.id.radio_group);
         regBtn = view.findViewById(R.id.registerId);
@@ -93,14 +112,17 @@ public class SignUpDetails_Fragment extends Fragment {
         listener = null;
     }
 
-    public void listenerTrigger() {
+    public void listenerTriggerForSignUpUser() throws JSONException {
+        this.listener.backFromJoinUsFragment(myMail,myPass);
+    }
+
+    public void listenerTrigger() throws JSONException {
         this.listener.backFromDetailsFragment(newUser);
         setFragment(logIn_fragment);
     }
 
 
     private void setRegBtn(View view) {
-
 
         regBtn.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -109,6 +131,7 @@ public class SignUpDetails_Fragment extends Fragment {
                     Toast.makeText(getActivity(), "Sign up has Failed",Toast.LENGTH_SHORT).show();
                 }
                 else {
+
                     int rgs_id = radio_group.getCheckedRadioButtonId();
                     genderRadioBtn = v1.findViewById(rgs_id);
                     if(genderRadioBtn == null){
@@ -116,8 +139,12 @@ public class SignUpDetails_Fragment extends Fragment {
                     else{
                     }
                     gender = genderRadioBtn.getText().toString();
-                    newUser = new User(editTextFullName,mAuth.getCurrentUser().getUid(), gender, weigh,height);
-                    listenerTrigger();
+                    newUser = new User(editTextFullName,mAuth.getCurrentUser().getUid(), gender, weigh, age,0);
+                    try {
+                        listenerTrigger();
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
                 }
             }
         });
@@ -126,7 +153,6 @@ public class SignUpDetails_Fragment extends Fragment {
     private boolean validateReg(View view) {
         boolean valid = true;
         editTextFullName = et_fullName.getText().toString().trim();
-
 
         //TODO fix editTextFullName.contains(("[0-9]+")))
         if(editTextFullName.isEmpty()|| et_fullName.length()>20 || editTextFullName.contains(("[0-9]+"))){
@@ -146,17 +172,18 @@ public class SignUpDetails_Fragment extends Fragment {
         }
 
         try{
-            height = Double.parseDouble(et_height.getText().toString());
-            if(!(et_height.getText().toString().contains("."))){
-                et_height.setError("Not a Valid Height (Example pf valid Height: 1.75 )");
-                et_height.requestFocus();
+            age = Integer.parseInt(et_age.getText().toString());
+            if((et_age.getText().toString().contains("."))){
+                et_age.setError("Not a Valid Age (Example pf valid age: 25 )");
+                et_age.requestFocus();
                 valid = false;
             }
         }
 
         catch (NumberFormatException e){
-            et_height.setError("Not a Valid height");
-            et_height.requestFocus();            valid = false;
+            et_age.setError("Not a Valid Age");
+            et_age.requestFocus();
+            valid = false;
         }
 
         if(mDisplayDate.getText().toString().equals(mDisplayDate.getContext().getResources().getString(R.string.birth_date))){
@@ -213,7 +240,7 @@ public class SignUpDetails_Fragment extends Fragment {
     private void initializeAttributes(View view) {
         et_fullName =  view.findViewById(R.id.fullNameOnDetails);
         et_weigh =  view.findViewById(R.id.weighDetails);
-        et_height =  view.findViewById(R.id.heightDetails);
+        et_age =  view.findViewById(R.id.ageDetails);
     }
 
 

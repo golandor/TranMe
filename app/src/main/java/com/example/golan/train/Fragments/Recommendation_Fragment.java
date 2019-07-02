@@ -4,14 +4,20 @@ import android.content.Context;
 import android.graphics.Color;
 import android.media.audiofx.AudioEffect;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
+import android.support.annotation.RequiresApi;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Toast;
 
+import com.example.golan.train.BL.Course;
+import com.example.golan.train.BL.GraphData;
 import com.example.golan.train.R;
 import com.github.mikephil.charting.animation.Easing;
 import com.github.mikephil.charting.charts.BarChart;
@@ -31,21 +37,47 @@ import com.github.mikephil.charting.data.PieData;
 import com.github.mikephil.charting.data.PieDataSet;
 import com.github.mikephil.charting.data.PieEntry;
 import com.github.mikephil.charting.formatter.IndexAxisValueFormatter;
-import com.github.mikephil.charting.formatter.PercentFormatter;
 import com.github.mikephil.charting.interfaces.datasets.ILineDataSet;
 import com.github.mikephil.charting.utils.ColorTemplate;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.Query;
+import com.google.firebase.database.ValueEventListener;
 
-import java.text.Format;
+import java.text.ParseException;
 import java.util.ArrayList;
-import java.util.Random;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.Map;
+
+import java.util.Optional;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class Recommendation_Fragment extends Fragment {
+
+    final int NUM_OF_DAYS_TO_BARCHART = 7;
+    final int NUM_OF_DAYS_TO_PIECHART = 30;
+    final int NUM_OF_DAYS_TO_LINECHART = 4;
 
     private PieChart pieChart;
     private LineChart lineChart;
     private BarChart barChart;
-
+    private ArrayList<Course> qList;
+    private ArrayList<GraphData> barChartList;
+    private ArrayList<GraphData> pieChartList;
+    private ArrayList<GraphData> lineChartList;
+    private ArrayList<GraphData> myList;
+    private DatabaseReference myGraphRef;
+    private String user_id;
+    private FirebaseAuth firebaseAuth;
     private View view;
+
     public Recommendation_Fragment() {
     }
 
@@ -53,171 +85,90 @@ public class Recommendation_Fragment extends Fragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setHasOptionsMenu(true);
-
     }
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,Bundle savedInstanceState) {
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         view = inflater.inflate(R.layout.fragment_recommendation_, container, false);
-
-
-        initPieChart();
-        initLineChart();
-        initBarChart();
-
+        initFireBase();
+        qList = new ArrayList<>();
+        myList = new ArrayList<>();
+        barChartList = new ArrayList<>();
+        pieChartList = new ArrayList<>();
+        lineChartList = new ArrayList<>();
+        getCoursesList();
 
         return view;
     }
 
-    private ArrayList<Entry> dataValues1(){
+    public void initFireBase() {
+        firebaseAuth = FirebaseAuth.getInstance();
+        myGraphRef = FirebaseDatabase.getInstance().getReference("Graphs");
 
-        ArrayList<Entry> dataVals = new ArrayList<>();
+        if (firebaseAuth.getCurrentUser() != null) {
 
-        dataVals.add(new Entry(0,70));
-        dataVals.add(new Entry(1,74));
-        dataVals.add(new Entry(2,78));
-        dataVals.add(new Entry(3,72));
-        dataVals.add(new Entry(4,80));
-        dataVals.add(new Entry(5,84));
-        dataVals.add(new Entry(6,84));
-        dataVals.add(new Entry(7,88));
-        dataVals.add(new Entry(8,90));
-        dataVals.add(new Entry(10,94));
-        dataVals.add(new Entry(11,94));
-        dataVals.add(new Entry(12,89));
-        dataVals.add(new Entry(13,87));
-        dataVals.add(new Entry(14,91));
-        dataVals.add(new Entry(15,99));
-        dataVals.add(new Entry(16,120));
-        dataVals.add(new Entry(17,130));
-        dataVals.add(new Entry(18,125));
-        dataVals.add(new Entry(19,140));
-        dataVals.add(new Entry(20,120));
-        dataVals.add(new Entry(21,99));
-        dataVals.add(new Entry(22,90));
-        dataVals.add(new Entry(23,110));
-        dataVals.add(new Entry(24,100));
-        dataVals.add(new Entry(25,96));
-        dataVals.add(new Entry(26,94));
-        dataVals.add(new Entry(27,94));
-        dataVals.add(new Entry(28,92));
-        dataVals.add(new Entry(29,91));
-        dataVals.add(new Entry(30,80));
-
-        return dataVals;
+        }
+        FirebaseUser user = firebaseAuth.getCurrentUser();
+        user_id = user.getUid();
     }
-    private ArrayList<Entry> dataValues2(){
 
-        ArrayList<Entry> dataVals = new ArrayList<>();
+    public void getCoursesList() {
+        myGraphRef.child(user_id).addListenerForSingleValueEvent(new ValueEventListener() {
+            @RequiresApi(api = Build.VERSION_CODES.N)
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                if (dataSnapshot.exists()) {
+                    myList.clear();
+                    for (DataSnapshot dataSnapshot1 : dataSnapshot.getChildren()
+                    ) {
+                        GraphData graphData = dataSnapshot1.getValue(GraphData.class);
+                        myList.add(graphData);
+                    }
+                } else {
+                    myList.clear();
+                }
 
-        dataVals.add(new Entry(0,70));
-        dataVals.add(new Entry(1,80));
-        dataVals.add(new Entry(2,78));
-        dataVals.add(new Entry(3,76));
-        dataVals.add(new Entry(4,80));
-        dataVals.add(new Entry(5,83));
-        dataVals.add(new Entry(6,84));
-        dataVals.add(new Entry(7,88));
-        dataVals.add(new Entry(8,96));
-        dataVals.add(new Entry(10,74));
-        dataVals.add(new Entry(11,94));
-        dataVals.add(new Entry(12,89));
-        dataVals.add(new Entry(13,87));
-        dataVals.add(new Entry(14,91));
-        dataVals.add(new Entry(15,99));
-        dataVals.add(new Entry(16,140));
-        dataVals.add(new Entry(17,80));
-        dataVals.add(new Entry(18,83));
-        dataVals.add(new Entry(19,85));
-        dataVals.add(new Entry(20,90));
-        dataVals.add(new Entry(21,99));
-        dataVals.add(new Entry(22,90));
-        dataVals.add(new Entry(23,100));
-        dataVals.add(new Entry(24,100));
-        dataVals.add(new Entry(25,92));
-        dataVals.add(new Entry(26,91));
-        dataVals.add(new Entry(27,91));
-        dataVals.add(new Entry(28,97));
-        dataVals.add(new Entry(29,91));
-        dataVals.add(new Entry(30,70));
+                try {
+                    initPieChart();
+                    initLineChart();
+                    initBarChart();
+                } catch (ParseException e) {
+                    e.printStackTrace();
+                }
+            }
 
-        return dataVals;
-    } private ArrayList<Entry> dataValues3(){
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
 
-        ArrayList<Entry> dataVals = new ArrayList<>();
-
-        dataVals.add(new Entry(0,70));
-        dataVals.add(new Entry(1,80));
-        dataVals.add(new Entry(2,78));
-        dataVals.add(new Entry(3,76));
-        dataVals.add(new Entry(4,80));
-        dataVals.add(new Entry(5,83));
-        dataVals.add(new Entry(6,84));
-        dataVals.add(new Entry(7,88));
-        dataVals.add(new Entry(8,96));
-        dataVals.add(new Entry(10,90));
-        dataVals.add(new Entry(11,110));
-        dataVals.add(new Entry(12,110));
-        dataVals.add(new Entry(13,110));
-        dataVals.add(new Entry(14,91));
-        dataVals.add(new Entry(15,99));
-        dataVals.add(new Entry(16,140));
-        dataVals.add(new Entry(17,80));
-        dataVals.add(new Entry(18,83));
-        dataVals.add(new Entry(19,85));
-        dataVals.add(new Entry(20,90));
-        dataVals.add(new Entry(21,99));
-        dataVals.add(new Entry(22,90));
-        dataVals.add(new Entry(23,100));
-        dataVals.add(new Entry(24,100));
-        dataVals.add(new Entry(25,92));
-        dataVals.add(new Entry(26,91));
-        dataVals.add(new Entry(27,91));
-        dataVals.add(new Entry(28,97));
-        dataVals.add(new Entry(29,91));
-        dataVals.add(new Entry(30,70));
-
-        return dataVals;
+            }
+        });
     }
-    private void initLineChart(){
-        lineChart = view.findViewById(R.id.line_chart_id);
-        LineDataSet lineDataSet1 = new LineDataSet(dataValues1(),"Spinning");
-        LineDataSet lineDataSet2 = new LineDataSet(dataValues2(),"Pilates");
-        LineDataSet lineDataSet3 = new LineDataSet(dataValues3(),"Boxing");
-        LineDataSet lineDataSet4 = new LineDataSet(dataValues1(),"sdfsd");
-        LineDataSet lineDataSet5 = new LineDataSet(dataValues2(),"122");
-        LineDataSet lineDataSet6 = new LineDataSet(dataValues3(),"456");
 
+
+    @RequiresApi(api = Build.VERSION_CODES.N)
+    private void initLineChart() {
         ArrayList<LineDataSet> lineDataSets = new ArrayList<>();
-        lineDataSets.add(lineDataSet1);
-        lineDataSets.add(lineDataSet2);
-        lineDataSets.add(lineDataSet3);
-        lineDataSets.add(lineDataSet4);
-        lineDataSets.add(lineDataSet5);
-        lineDataSets.add(lineDataSet6);
-
-        setColorsToLineCharts(lineDataSets);
         ArrayList<ILineDataSet> datasets = new ArrayList<>();
+        LineDataSet lineDataSet;
+        lineChart = view.findViewById(R.id.line_chart_id);
 
+        lineChartList = setChartDays(NUM_OF_DAYS_TO_LINECHART);
+        Collections.reverse(lineChartList);
 
-        datasets.add(lineDataSet1);
-
-        lineDataSet1.setDrawValues(false);
-
-        datasets.add(lineDataSet2);
-        datasets.add(lineDataSet3);
-        datasets.add(lineDataSet4);
-        datasets.add(lineDataSet5);
-        datasets.add(lineDataSet6);
-
-        lineDataSet2.setDrawValues(false);
+        for (int i = 0; i < lineChartList.size(); i++) {
+            lineDataSet = new LineDataSet(dataValuesWithHrList(i), lineChartList.get(i).getCourseName());
+            lineDataSets.add(lineDataSet);
+            datasets.add(lineDataSet);
+            lineDataSet.setDrawValues(false);
+            lineDataSet.setDrawCircles(false);
+        }
+        setColorsToLineCharts(lineDataSets);
 
         LineData data = new LineData(datasets);
 
         lineChart.setData(data);
         lineChart.invalidate();
         lineChart.setDescription(null);
-
         lineChart.getAxisLeft().setTextColor(Color.WHITE);
         lineChart.getXAxis().setEnabled(false);
 
@@ -232,46 +183,58 @@ public class Recommendation_Fragment extends Fragment {
 
 
     }
-
     private void setColorsToLineCharts(ArrayList<LineDataSet> datasets) {
-        int i = 5;
+        int i = 0;
         for (LineDataSet ds : datasets) {
-            i--;
-            if (i < 0) {
-                ds.setColor(Color.WHITE);
-            }else
+            if (i <5) {
             ds.setColor(ColorTemplate.JOYFUL_COLORS[i]);
+            i++;
+            }
+            else{
+                ds.setColor(Color.WHITE);
+            }
         }
     }
 
-    private void initBarChart(){
-        barChart=view.findViewById(R.id.bar_chart_id);
+
+    @RequiresApi(api = Build.VERSION_CODES.N)
+    private ArrayList<GraphData> setChartDays(int days){
+        return (ArrayList<GraphData>) myList.stream()
+                        .sorted(Comparator.comparing(GraphData::getDate).reversed())
+                        .limit(days)
+                        .collect(Collectors.toList());
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.N)
+    private void initBarChart() {
+        barChart = view.findViewById(R.id.bar_chart_id);
         Description description = new Description();
-        description.setText("bar here");
         description.setTextSize(15);
         description.setTextColor(Color.WHITE);
-        // lineChart.setDescription(description);
 
-        setData(7);
+        setData();
         barChart.setFitBars(true);
-
-
     }
 
-    private void setData(int days) {
+    @RequiresApi(api = Build.VERSION_CODES.N)
+    private void setData() {
         ArrayList<BarEntry> yVals = new ArrayList<>();
-        for (int i = 0; i < days ; i++) {
-            int value = (int) (Math.random()*300 + 300);
-            yVals.add(new BarEntry(i,value));
+        barChartList = setChartDays(NUM_OF_DAYS_TO_BARCHART);
+        Collections.reverse(barChartList);
+
+        String[] myDays = new String[barChartList.size()];
+
+        for (int i = 0; i < barChartList.size(); i++) {
+            yVals.add(new BarEntry(i, barChartList.get(i).getCalories()));
+        }
+        for (int i = 0; i < myDays.length; i++) {
+            myDays[i] = barChartList.get(i).getDate().split("-")[0] + "." + barChartList.get(i).getDate().split("-")[1];
         }
 
-        String[] myDays = new String[]{"Sun","Mon","Tue","Wed","Thu","Fri","Sat"};
-
-        BarDataSet set = new BarDataSet(yVals,"");
+        BarDataSet set = new BarDataSet(yVals, "");
         set.setColors(ColorTemplate.JOYFUL_COLORS);
         set.setDrawValues(true);
         BarData data = new BarData(set);
-
 
         set.setValueTextColor(Color.WHITE);
         barChart.setData(data);
@@ -284,8 +247,8 @@ public class Recommendation_Fragment extends Fragment {
 
         barChart.getAxisLeft().setTextColor(Color.WHITE);
 
+
         XAxis xAxis = barChart.getXAxis();
-        xAxis.setLabelRotationAngle(45f);
         xAxis.setValueFormatter(new IndexAxisValueFormatter(myDays));
         xAxis.setCenterAxisLabels(true);
         xAxis.setDrawAxisLine(true);
@@ -293,15 +256,44 @@ public class Recommendation_Fragment extends Fragment {
         xAxis.setTextColor(Color.WHITE);
         xAxis.setGranularity(1);
         xAxis.setGranularityEnabled(true);
-
-
+        xAxis.setCenterAxisLabels(false);
         YAxis rightAxis = barChart.getAxisRight();
         rightAxis.setEnabled(false);
     }
 
-    private void initPieChart(){
+    private void getCoursesListForBarChart() {
+        Query query = myGraphRef.child(user_id);
+        System.out.println("before");
+        query.addListenerForSingleValueEvent(sortByDate);
+        System.out.println("after");
+    }
+
+    ValueEventListener sortByDate = new ValueEventListener() {
+        @RequiresApi(api = Build.VERSION_CODES.N)
+        @Override
+        public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+            System.out.println("in");
+            if (dataSnapshot.exists()) {
+                barChartList.clear();
+                for (DataSnapshot dataSnapshot1 : dataSnapshot.getChildren()
+                ) {
+                    GraphData graphData = dataSnapshot1.getValue(GraphData.class);
+                    barChartList.add(graphData);
+                    System.out.println("Data: " + graphData.toString());
+                }
+            }
+            else{
+                barChartList.clear();
+            }
+        }
+        @Override
+        public void onCancelled(@NonNull DatabaseError databaseError) {
+        }
+    };
+
+    @RequiresApi(api = Build.VERSION_CODES.N)
+    private void initPieChart() throws ParseException {
         pieChart = view.findViewById(R.id.pie_chart_id);
-        // pieChart.setUsePercentValues(true);
         pieChart.getDescription().setEnabled(false);
         pieChart.setExtraOffsets(5,10,5,5);
         pieChart.setDragDecelerationFrictionCoef(0.95f);
@@ -310,30 +302,45 @@ public class Recommendation_Fragment extends Fragment {
         pieChart.setEntryLabelColor(Color.BLACK);
         pieChart.setTransparentCircleRadius(61f);
 
+        pieChartList = setChartDays(NUM_OF_DAYS_TO_PIECHART);
+        Collections.reverse(pieChartList);
 
         ArrayList<PieEntry> yValues = new ArrayList<>();
-        yValues.add(new PieEntry(25,"Spinning"));
-        yValues.add(new PieEntry(33,"Yoga"));
-        yValues.add(new PieEntry(7,"Pilatice"));
-        yValues.add(new PieEntry(35,"Stations"));
+        Map<String, Integer> coursesNameAndCount = new HashMap();
+        for (int i = 0; i < pieChartList.size(); i++) {
+
+            // if key do not exists, put 1 as value, otherwise sum 1 to the value linked to key.
+            coursesNameAndCount.merge(pieChartList.get(i).getCourseName(), 1, Integer::sum);
+        }
+
+        for ( String key : coursesNameAndCount.keySet() ) {
+            yValues.add(new PieEntry(coursesNameAndCount.get(key),key));
+        }
 
         Legend legend = pieChart.getLegend();
         legend.setEnabled(false);
         pieChart.animateY(1000, Easing.EasingOption.EaseInOutCubic);
 
-        PieDataSet dataSet = new PieDataSet(yValues,"countries");
-        //    dataSet.setF;
+        PieDataSet dataSet = new PieDataSet(yValues,"Courses");
+        dataSet.setColors(ColorTemplate.JOYFUL_COLORS
+        );
         dataSet.setSliceSpace(3f);
         dataSet.setSelectionShift(5f);
-        dataSet.setColors(ColorTemplate.JOYFUL_COLORS);
-
 
         PieData data = new PieData(dataSet);
-        //data.val
         data.setValueTextSize(10f);
         data.setValueTextColor(Color.BLACK);
         pieChart.setData(data);
 
+    }
+
+    private ArrayList<Entry> dataValuesWithHrList(int j){
+
+        ArrayList<Entry> dataVals = new ArrayList<>();
+        for (int i = 0; i < lineChartList.get(j).getHrList().size(); i++) {
+            dataVals.add(new Entry(i,lineChartList.get(j).getHrList().get(i)));
+        }
+        return dataVals;
     }
 
     @Override

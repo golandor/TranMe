@@ -85,12 +85,17 @@ public class SignUp_Fragment extends Fragment {
                     Toast.makeText(getActivity(), "Sign up has Failed",Toast.LENGTH_SHORT).show();
                 }
                 else {
-                    listenerTrigger();
+//                    listenerTrigger();
+                    setFragment(detailsFragment);
                 }
             }
         });
     }
     private void setFragment(Fragment fragment){
+        final Bundle bundle = new Bundle();
+        bundle.putString("mail",editTextMail);
+        bundle.putString("password:",editTextPassword);
+        fragment.setArguments(bundle);
         FragmentTransaction ft = getFragmentManager().beginTransaction().addToBackStack(null);// when push the back btn we go back to the previous fragment
         ft.replace(R.id.placeholder,fragment);
         ft.commit();

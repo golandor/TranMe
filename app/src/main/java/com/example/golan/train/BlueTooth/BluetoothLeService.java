@@ -15,6 +15,7 @@ import android.content.Intent;
 import android.os.Binder;
 import android.os.IBinder;
 import android.util.Log;
+import android.widget.Toast;
 
 import com.example.golan.train.BL.MyService;
 
@@ -282,7 +283,12 @@ public class BluetoothLeService extends Service {
         System.out.println("in disconnect: " + hrList.toString());
         myBleSingleton = BleSingleton.getInstance();
         myBleSingleton.setHrlist(hrList);
-        myService.writeHRList(myBleSingleton.getCourseId(),myBleSingleton.getUserId(), myBleSingleton.getHrlist());
+        if(!hrList.isEmpty()) {
+            myService.writeHRList(myBleSingleton.getCourseId(), myBleSingleton.getUserId(), myBleSingleton.getHrlist());
+        }
+        else{
+            Toast.makeText(this, "BlueTooth connection failed, try again",Toast.LENGTH_SHORT).show();
+        }
     }
 
     /**
