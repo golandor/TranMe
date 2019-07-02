@@ -98,7 +98,7 @@
         app:layout_constraintVertical_bias="0.04000002" />
 
     <EditText
-        android:id="@+id/heightDetails"
+        android:id="@+id/ageDetails"
         android:layout_width="wrap_content"
         android:layout_height="40dp"
         android:layout_marginStart="8dp"
@@ -107,7 +107,7 @@
         android:layout_marginEnd="8dp"
         android:layout_marginRight="8dp"
         android:layout_marginBottom="8dp"
-        android:hint="@string/height"
+        android:hint="@string/age"
         android:textColor="@android:color/white"
         android:textColorHint="@android:color/white"
         android:textSize="20sp"
@@ -136,7 +136,7 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/heightDetails"
+        app:layout_constraintTop_toBottomOf="@+id/ageDetails"
         app:layout_constraintVertical_bias="0.043"
         tools:ignore="MissingConstraints">
 

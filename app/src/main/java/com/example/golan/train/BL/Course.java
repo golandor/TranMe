@@ -11,6 +11,7 @@ public class Course {
     private String trainerName;
     private String trainerId;
     private String time;
+    private String description;
     private String currentNumOfUsersInCourse;
     private String courseLocation;
     private String maxNumOfUsersInCourse;
@@ -22,13 +23,14 @@ public class Course {
         this.currentNumOfUsersInCourse="0";
     }
 
-    public Course(String courseName, String trainerName, String trainerId, String time,
+    public Course(String courseName, String trainerName, String trainerId, String time, String description,
                         String currentNumOfUsersInCourse, String courseLocation, String maxNumOfUsersInCourse, String courseId,
                         String date) {
         this.courseName = courseName;
         this.trainerName = trainerName;
         this.trainerId = trainerId;
         this.time = time;
+        this.description = description;
         this.currentNumOfUsersInCourse = currentNumOfUsersInCourse;
         this.courseLocation = courseLocation;
         this.maxNumOfUsersInCourse = maxNumOfUsersInCourse;
@@ -66,6 +68,14 @@ public class Course {
 
     public void setTime(String time) {
         this.time = time;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
     }
 
     public String getCurrentNumOfUsersInCourse() {

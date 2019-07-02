@@ -25,10 +25,8 @@ import com.hsalf.smilerating.SmileRating;
 
 public class MyZone_Fragment extends Fragment {
 
-    // private Button logOutBtn;
+    private Button logOutBtn;
     private FirebaseAuth firebaseAuth;
-    private Switch aSwitch;
-    private TextView switchTextView;
 
     View view;
 
@@ -46,20 +44,21 @@ public class MyZone_Fragment extends Fragment {
                              Bundle savedInstanceState) {
         view = inflater.inflate(R.layout.fragment_my_zone_, container, false);
         firebaseAuth = FirebaseAuth.getInstance();
-        aSwitch = view.findViewById(R.id.switch1);
+        logOutBtn = view.findViewById(R.id.logOut_id);
 
-        //  setlogOutBtn();
-        aSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                if(isChecked==true)
-                {
-                    aSwitch.setChecked(false);
-                    startActivity(new Intent(getContext(), DeviceScanActivity.class));
-                }
-            }
-        });
+        setLogOutBtn();
+
         return view;
+    }
+
+    private void setLogOutBtn() {
+           logOutBtn.setOnClickListener(new View.OnClickListener() {
+              @Override
+              public void onClick(View view) {
+                  firebaseAuth.signOut();
+                  startAct();
+              }
+            });
     }
 
     private void startAct() {
