@@ -90,20 +90,12 @@ public class MainActivity extends AppCompatActivity implements fromFragmentToMai
     private void signUpNewUserWithEmailPass(String mail, String password) {
         System.out.println("in signUpNewUserWithEmailPass");
         firebaseAuth.createUserWithEmailAndPassword(mail,password)
-                .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
-                    @Override
-                    public void onComplete(@NonNull Task<AuthResult> task) {
-                        FirebaseMessaging.getInstance().subscribeToTopic(firebaseAuth.getCurrentUser().getUid())
-                                .addOnCompleteListener(new OnCompleteListener<Void>() {
-                                    @Override
-                                    public void onComplete(@NonNull Task<Void> task) {
-                                        System.out.println("complete");
-                                    }
-                                });
-                        if(!task.isSuccessful()) {
+                .addOnCompleteListener(this, task -> {
+                    FirebaseMessaging.getInstance().subscribeToTopic(firebaseAuth.getCurrentUser().getUid())
+                            .addOnCompleteListener(task1 -> System.out.println("Sign up complete"));
+                    if(!task.isSuccessful()) {
 
-                            Toast.makeText(MainActivity.this, "Sign up has Failed, no internet connection",Toast.LENGTH_SHORT).show();
-                        }
+                        Toast.makeText(MainActivity.this, "Sign up has Failed, no internet connection",Toast.LENGTH_SHORT).show();
                     }
                 });
     }

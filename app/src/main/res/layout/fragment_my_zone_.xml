@@ -10,11 +10,30 @@
     android:layoutDirection="ltr">
 
 
-    <Button
-        android:id="@+id/logOut_id"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_centerHorizontal="true"
-        android:layout_centerVertical="true"
-        android:text="LogOut" />
+        <TextView
+            android:id="@+id/getMyCoursesBtnId"
+            android:textSize="24sp"
+            android:layout_marginTop="5dp"
+            android:gravity="center"
+            android:layout_centerHorizontal="true"
+            android:background="?android:attr/selectableItemBackground"
+            android:textColor="@color/colorYellowDark"
+            android:text="@string/your_next_courses"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+
+
+        <ListView
+            android:foregroundGravity="center"
+            android:id="@+id/listViewOnMyZone"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_marginTop="80dp"
+            android:layout_marginLeft="40dp"
+            android:layout_marginRight="40dp"
+            android:layout_marginBottom="40dp"
+
+            />
+
+
 </RelativeLayout>

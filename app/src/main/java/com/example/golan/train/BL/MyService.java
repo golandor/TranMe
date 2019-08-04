@@ -10,6 +10,7 @@ import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
+import com.example.golan.train.Fragments.RealRecommendation;
 import com.example.golan.train.Interfaces.IMyService;
 
 import org.json.JSONArray;
@@ -17,7 +18,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.List;
-import java.util.concurrent.CountDownLatch;
 
 public class MyService implements IMyService {
 
@@ -26,12 +26,15 @@ public class MyService implements IMyService {
     private RequestQueue mQueue;
     private String type;
     private String stringResultFromServer;
+    private String courseNameForRecommendation;
+    private String trainerNameForRecommendation;
     private boolean boolResultFromServer;
 
     private Context context;
-    //private String url = "http://192.168.1.21:8080/trainme/activity";
-    private String url = "http://192.168.1.21:8080";
+//    private String url = "http://192.168.1.21:8080";
+    private String url = "http://172.40.0.152:8080";
     private String activityUrl = url + "/trainme/activity";
+    private String getRecommendationUrl = url + "/trainme/recommendation";
 
     private JSONObject myUser;
     private JSONObject myJson;
@@ -42,7 +45,6 @@ public class MyService implements IMyService {
         this.context = context;
         mQueue = Volley.newRequestQueue(this.context);
     }
-
 
     @Override
     /**    DONE     **/
@@ -60,6 +62,7 @@ public class MyService implements IMyService {
         myUser.put("fullName", user.getFullName());
         myUser.put("age", user.getAge());
         myUser.put("gender", user.getGender());
+        myUser.put("token", user.getToken());
         myUser.put("userId", user.getUser_id());
         myUser.put("weigh", user.getWeigh());
 
@@ -70,19 +73,13 @@ public class MyService implements IMyService {
         myJson.put("moreAttributes", moreAttributes);
 
         JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.POST, activityUrl, myJson,
-                new Response.Listener<JSONObject>() {
-                    @Override
-                    public void onResponse(JSONObject response) {
-                        Toast.makeText(context, "Added To Waiting List",Toast.LENGTH_SHORT).show();
-                    }
-                }, new Response.ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError error) {
-                Toast.makeText(context, "Something Went Wrong",Toast.LENGTH_SHORT).show();
-                Log.d(TAG,"On addUserToWaitingList" + error);
+                response ->
+                        Toast.makeText(context, "Added To Waiting List",Toast.LENGTH_SHORT).show(),
+                error -> {
+                    Toast.makeText(context, "Something Went Wrong",Toast.LENGTH_SHORT).show();
+                    Log.d(TAG,"On addUserToWaitingList" + error);
 
-            }
-        });
+                });
         MySingelton.getInstance(context).addToRequesrtQueue(jsonObjectRequest);
     }
 
@@ -149,7 +146,7 @@ public class MyService implements IMyService {
                 response ->
                         Toast.makeText(context, "Thanks For Your Rate",Toast.LENGTH_SHORT).show(),
                 error -> {
-                    Toast.makeText(context, "Something Went Wrong",Toast.LENGTH_SHORT).show();
+//                    Toast.makeText(context, "Something Went Wrong",Toast.LENGTH_SHORT).show();
                     Log.d(TAG,"On rateCourse" + error);
 
                 });
@@ -181,10 +178,8 @@ public class MyService implements IMyService {
 
         myJson.put("type", type);
         myJson.put("moreAttributes", moreAttributes);
-System.out.println("hwrersbgfxn hbgrfdymjn bjhbhbgvc");
         JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.POST, activityUrl, myJson,
                 response -> {
-
                                 //boolResultFromServer = response.getJSONObject("moreAttributes").getBoolean("onWaitingList");
                     //try {
                       //  listener.onRegisterUserToCourseFromMyService(true);
@@ -198,43 +193,18 @@ System.out.println("hwrersbgfxn hbgrfdymjn bjhbhbgvc");
         MySingelton.getInstance(context).addToRequesrtQueue(jsonObjectRequest);
     }
 
-    /**    DONE     **/
-    @Override
-    public void setCurrentNumOfUsersRegisteredToCourse(String courseId,int CurrentNumOfUsers) throws JSONException {
-        myJson = new JSONObject();
-        myCourse = new JSONObject();
-        moreAttributes = new JSONObject();
-
-        this.type = "SetCurrentNumOfUsersRegisteredToCourse";
-
-        myCourse.put("courseId", courseId);
-        myCourse.put("currentNumOfUsersInCourse", CurrentNumOfUsers);
-
-
-        moreAttributes.put("courseEntity", myCourse);
-
-        myJson.put("type", type);
-        myJson.put("moreAttributes", moreAttributes);
-
-        JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.POST, activityUrl, myJson,
-                response -> {
-                }, error -> Log.d(TAG, "setCurrentNumOfUsersRegisteredToCourse: " + error));
-        MySingelton.getInstance(context).addToRequesrtQueue(jsonObjectRequest);
-
-    }
-
     @Override
     /**    DONE     **/
-    public void deleteUserFromCourse(String courseId, User user) throws JSONException {
+    public void deleteUserFromCourse(String courseId,String courseName, User user) throws JSONException {
         myUser = new JSONObject();
         myJson = new JSONObject();
         myCourse = new JSONObject();
-
         moreAttributes = new JSONObject();
 
         this.type = "RemoveUserFromCourse";
 
         myCourse.put("courseId", courseId);
+        myCourse.put("courseName", courseName);
         myUser.put("userId", user.getUser_id());
 
         moreAttributes.put("courseEntity", myCourse);
@@ -244,18 +214,12 @@ System.out.println("hwrersbgfxn hbgrfdymjn bjhbhbgvc");
         myJson.put("moreAttributes", moreAttributes);
 
         JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.POST, activityUrl, myJson,
-                new Response.Listener<JSONObject>() {
-                    @Override
-                    public void onResponse(JSONObject response) {
-                        Toast.makeText(context, "you've been removed from the course",Toast.LENGTH_SHORT).show();
-                    }
-                }, new Response.ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError error) {
-                Toast.makeText(context, "Something Went Wrong",Toast.LENGTH_SHORT).show();
-                Log.d(TAG,"On deleteUserFromCourse" + error);
-            }
-        });
+                response ->
+                        Toast.makeText(context, "you've been removed from the course",Toast.LENGTH_SHORT).show(),
+                error -> {
+                        Toast.makeText(context, "Something Went Wrong",Toast.LENGTH_SHORT).show();
+                        Log.d(TAG,"On deleteUserFromCourse" + error);
+                });
         MySingelton.getInstance(context).addToRequesrtQueue(jsonObjectRequest);
     }
 
@@ -310,6 +274,7 @@ System.out.println("hwrersbgfxn hbgrfdymjn bjhbhbgvc");
         myUser.put("fullName", user.getFullName());
         myUser.put("age", user.getAge());
         myUser.put("gender", user.getGender());
+        myUser.put("token", user.getToken());
         myUser.put("userId", user.getUser_id());
         myUser.put("weigh", user.getWeigh());
 
@@ -324,156 +289,31 @@ System.out.println("hwrersbgfxn hbgrfdymjn bjhbhbgvc");
         MySingelton.getInstance(context).addToRequesrtQueue(jsonObjectRequest);
     }
 
-    @Override
     /**    DONE     **/
-    public void isOnWaitingList(final RecyclerViewAdapter listener, String courseId, User user) throws JSONException {
+    @Override
+    public void getRecommendation(final RealRecommendation listener, String userNumber) throws JSONException, InterruptedException {
         myUser = new JSONObject();
         myJson = new JSONObject();
-        myCourse = new JSONObject();
+        myUser.put("userNumber", userNumber);
+        myJson.put("user", myUser);
 
-        moreAttributes = new JSONObject();
-
-        this.type = "IsOnWaitingList";
-
-        myCourse.put("courseId", courseId);
-        myUser.put("userId", user.getUser_id());
-
-        moreAttributes.put("courseEntity", myCourse);
-        moreAttributes.put("user", myUser);
-
-        myJson.put("type", type);
-        myJson.put("moreAttributes", moreAttributes);
-
-        JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.POST, activityUrl, myJson,
+        JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.POST, getRecommendationUrl, myUser,
                 response -> {
+
                     try {
-                        boolResultFromServer = response.getJSONObject("moreAttributes").getBoolean("onWaitingList");
-                        listener.onIsUserRegister(boolResultFromServer);
+                        courseNameForRecommendation = response.getString("courseName");
+                        trainerNameForRecommendation = response.getString("trainerName");
+                        listener.onGetRecommendationFromMyService(courseNameForRecommendation,trainerNameForRecommendation);
 
                     } catch (JSONException e) {
                         e.printStackTrace();
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+
                     }
                 }, error -> {
-                    System.out.println("Error in volley use");
-                    System.out.println("Error: " + error.toString());
-                });
-        MySingelton.getInstance(context).addToRequesrtQueue(jsonObjectRequest);
-    }
-
-    @Override
-    /**    DONE     **/
-    public void isFull(final RecyclerViewAdapter listener, String courseId) throws JSONException {
-        myJson = new JSONObject();
-        myCourse = new JSONObject();
-
-        moreAttributes = new JSONObject();
-
-        this.type = "CheckCourseIsFull";
-
-        myCourse.put("courseId", courseId);
-
-        moreAttributes.put("courseEntity", myCourse);
-
-        myJson.put("type", type);
-        myJson.put("moreAttributes", moreAttributes);
-
-        JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.POST, activityUrl, myJson,
-                new Response.Listener<JSONObject>() {
-                    @Override
-                    public void onResponse(JSONObject response) {
-                        try {
-                            boolResultFromServer = response.getJSONObject("moreAttributes").getBoolean("full");
-                            listener.onIsFull(boolResultFromServer);
-                        } catch (JSONException e) {
-                            e.printStackTrace();
-                        }
-                    }
-                }, new Response.ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError error) {
-                System.out.println("Error in volley use");
-                System.out.println("Error: " + error.toString());
-            }
-        });
-        MySingelton.getInstance(context).addToRequesrtQueue(jsonObjectRequest);
-    }
-
-    @Override
-    /**    DONE     **/
-    public void isUserRegistered(final RecyclerViewAdapter listener, String courseId, User user) throws JSONException {
-        myUser = new JSONObject();
-        myJson = new JSONObject();
-        myCourse = new JSONObject();
-
-        moreAttributes = new JSONObject();
-
-        this.type = "IsUserRegisteredToCourse";
-
-        myCourse.put("courseId", courseId);
-        myUser.put("userId", user.getUser_id());
-
-        moreAttributes.put("courseEntity", myCourse);
-        moreAttributes.put("user", myUser);
-
-        myJson.put("type", type);
-        myJson.put("moreAttributes", moreAttributes);
-
-        JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.POST, activityUrl, myJson,
-                new Response.Listener<JSONObject>() {
-                    @Override
-                    public void onResponse(JSONObject response) {
-                        try {
-                            boolResultFromServer = response.getJSONObject("moreAttributes").getBoolean("registerdToCourse");
-                            listener.onIsUserRegister(boolResultFromServer);
-                            //System.out.println("Response: " + boolResultFromServer);
-                        } catch (JSONException e) {
-                            e.printStackTrace();
-                        }
-                    }
-                }, new Response.ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError error) {
-                System.out.println("Error in volley use");
-                System.out.println("Error: " + error.toString());
-            }
-        });
-        MySingelton.getInstance(context).addToRequesrtQueue(jsonObjectRequest);
-    }
-
-    /**    DONE     **/
-    @Override
-    public void isDatePassed(final RecyclerViewAdapter listener, String courseId) throws JSONException {
-        myJson = new JSONObject();
-        myCourse = new JSONObject();
-
-        moreAttributes = new JSONObject();
-
-        this.type = "IsDatedPassed";
-
-        myCourse.put("courseId", courseId);
-
-        moreAttributes.put("courseEntity", myCourse);
-
-        myJson.put("type", type);
-        myJson.put("moreAttributes", moreAttributes);
-
-        JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.POST, activityUrl, myJson,
-                new Response.Listener<JSONObject>() {
-                    @Override
-                    public void onResponse(JSONObject response) {
-                        try {
-                            boolResultFromServer = response.getJSONObject("moreAttributes").getBoolean("datePassed");
-                            listener.onIsDatePassed(boolResultFromServer);
-                        } catch (JSONException e) {
-                            e.printStackTrace();
-                        }
-                    }
-                }, new Response.ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError error) {
-                System.out.println("Error in volley use");
-                System.out.println("Error: " + error.toString());
-            }
+            System.out.println("Error in volley use");
+            System.out.println("Error: " + error.toString());
         });
         MySingelton.getInstance(context).addToRequesrtQueue(jsonObjectRequest);
     }

@@ -15,10 +15,13 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
+        android:focusable="auto"
+        android:focusableInTouchMode="false"
+        app:itemBackground="@color/colorPrimaryDark"
+        app:itemIconSize="24dp"
         app:itemIconTint="@color/colorWhite"
         app:itemTextColor="@color/colorWhite"
-        app:itemBackground="@color/colorPrimaryDark"
-        app:menu="@menu/navigation"/>
+        app:menu="@menu/navigation" />
 
     <android.support.v4.view.ViewPager
         android:id="@+id/viewpager_id"

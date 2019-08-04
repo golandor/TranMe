@@ -4,6 +4,7 @@ public class User {
     private String fullName;
     private String user_id;
     private String gender;
+    private String token;
     private double weigh;
     private int age;
     private long userNumber;
@@ -11,15 +12,24 @@ public class User {
     public User() {
     }
 
-    public User(String fullName, String user_id, String gender, double weigh, int age,long userNumber) {
+    public User(String fullName, String user_id, String gender, String token, double weigh, int age,long userNumber) {
         this.fullName = fullName;
         this.user_id = user_id;
         this.gender = gender;
         this.weigh = weigh;
+        this.token = token;
         this.age = age;
         this.userNumber = userNumber;
+
     }
 
+    public String getToken() {
+        return token;
+    }
+
+    public void setToken(String token) {
+        this.token = token;
+    }
 
     public String getFullName() {
         return fullName;

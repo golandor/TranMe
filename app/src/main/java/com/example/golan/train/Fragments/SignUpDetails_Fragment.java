@@ -5,6 +5,7 @@ import android.content.Context;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentTransaction;
 import android.util.Log;
@@ -22,7 +23,11 @@ import android.widget.Toast;
 import com.example.golan.train.Interfaces.fromFragmentToMainActivity;
 import com.example.golan.train.BL.User;
 import com.example.golan.train.R;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.iid.FirebaseInstanceId;
+import com.google.firebase.iid.InstanceIdResult;
 
 
 import org.json.JSONException;
@@ -48,6 +53,7 @@ public class SignUpDetails_Fragment extends Fragment {
     public fromFragmentToMainActivity listener;
     private String myMail;
     private String myPass;
+    private String token;
 
     public SignUpDetails_Fragment() {
     }
@@ -123,28 +129,33 @@ public class SignUpDetails_Fragment extends Fragment {
 
 
     private void setRegBtn(View view) {
+        FirebaseInstanceId.getInstance().getInstanceId()
+                .addOnCompleteListener(task -> {
+                    if (!task.isSuccessful()) {
+                        return;
+                    }
+                    // Get new Instance ID token
+                     token = task.getResult().getToken();
+                });
+        regBtn.setOnClickListener(view1 -> {
+            if(!validateReg(view1)){
+                Toast.makeText(getActivity(), "Sign up has Failed",Toast.LENGTH_SHORT).show();
+            }
+            else {
 
-        regBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                if(!validateReg(view)){
-                    Toast.makeText(getActivity(), "Sign up has Failed",Toast.LENGTH_SHORT).show();
+                int rgs_id = radio_group.getCheckedRadioButtonId();
+                genderRadioBtn = v1.findViewById(rgs_id);
+                if(genderRadioBtn == null){
                 }
-                else {
+                else{
+                }
+                gender = genderRadioBtn.getText().toString();
+                newUser = new User(editTextFullName,mAuth.getCurrentUser().getUid(), gender,token, weigh, age,0);
 
-                    int rgs_id = radio_group.getCheckedRadioButtonId();
-                    genderRadioBtn = v1.findViewById(rgs_id);
-                    if(genderRadioBtn == null){
-                    }
-                    else{
-                    }
-                    gender = genderRadioBtn.getText().toString();
-                    newUser = new User(editTextFullName,mAuth.getCurrentUser().getUid(), gender, weigh, age,0);
-                    try {
-                        listenerTrigger();
-                    } catch (JSONException e) {
-                        e.printStackTrace();
-                    }
+                try {
+                    listenerTrigger();
+                } catch (JSONException e) {
+                    e.printStackTrace();
                 }
             }
         });
