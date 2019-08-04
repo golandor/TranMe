@@ -89,22 +89,9 @@ public class Scheduler_Fragment extends Fragment {
         courseRecyclerView.setLayoutManager(mLayoutManager);
         mLayoutManager.setReverseLayout(true);
         mLayoutManager.setStackFromEnd(true);
-//        list = new ArrayList<>();
         courseRef = FirebaseDatabase.getInstance().getReference().child(getString(R.string.courses));
         adapter = new RecyclerViewAdapter(getContext(), list);
         courseRecyclerView.setAdapter(adapter);
-        courseRef.addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                // if we want to start the query we should only put this line on comment
-              //  courseRef.addListenerForSingleValueEvent(valueEventListener);
-            }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError databaseError) {
-
-            }
-        });
     }
 
     private void setQuery(String myDate) {
@@ -114,7 +101,6 @@ public class Scheduler_Fragment extends Fragment {
     }
 
     final ValueEventListener valueEventListener = new ValueEventListener() {
-        //        @RequiresApi(api = Build.VERSION_CODES.N)
         @Override
         public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
             if (dataSnapshot.exists()) {

@@ -263,9 +263,7 @@ public class Recommendation_Fragment extends Fragment {
 
     private void getCoursesListForBarChart() {
         Query query = myGraphRef.child(user_id);
-        System.out.println("before");
         query.addListenerForSingleValueEvent(sortByDate);
-        System.out.println("after");
     }
 
     ValueEventListener sortByDate = new ValueEventListener() {

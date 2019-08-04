@@ -19,6 +19,7 @@ import android.widget.RatingBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.example.golan.train.Activities.MainActivity;
 import com.example.golan.train.BlueTooth.DeviceScanActivity;
 import com.example.golan.train.R;
 import com.google.android.gms.tasks.OnCompleteListener;
@@ -30,6 +31,8 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.iid.FirebaseInstanceId;
+import com.google.firebase.iid.InstanceIdResult;
 import com.hsalf.smilerating.BaseRating;
 import com.hsalf.smilerating.SmileRating;
 
@@ -42,6 +45,8 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+
+import static android.provider.Settings.System.getString;
 
 public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapter.MyViewHolder> {
 
@@ -56,6 +61,7 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
     private int maxNumberOfPeopleInCourse;
     private FirebaseAuth firebaseAuth;
     private String user_id;
+    private String token;
     private DatabaseReference myRef;
     private DatabaseReference courseRegisterRef;
     private String course_id;
@@ -68,8 +74,6 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
     private SimpleDateFormat currentTimeToString,mdFormat;
     private MyService myService;
     private SmileRating smileRating;
-
-  //  private RatingBar ratingBar;
 
 
     public RecyclerViewAdapter(Context mcContext, ArrayList<Course> mCourseList){
@@ -114,14 +118,26 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
                    if(!isDatePassed(dataSnapshot)){
                        if(!isFull(dataSnapshot)){
                            if(!isUserRegistered(dataSnapshot)){
-                               finalCourseStatus = (currentNumOfUsersInCourse) + "/" + (maxNumberOfPeopleInCourse);
+                               if(dataSnapshot.child("waitingList").exists()) {
+                                   if(isOnWaitingList(dataSnapshot)){
+                                       finalCourseStatus = (currentNumOfUsersInCourse) + "/" + (maxNumberOfPeopleInCourse);
+                                   }else{
+                                       finalCourseStatus = "Course Is Full";
+                                   }
+                               }else {
+                                   finalCourseStatus = (currentNumOfUsersInCourse) + "/" + (maxNumberOfPeopleInCourse);
+                               }
                            }else{  // isUserRegistered() is TRUE
                                finalCourseStatus = mcContext.getString(R.string.cancel_regisration);
                            }
                        }else{  //  isFull() is TRUE
                            if(!isUserRegistered(dataSnapshot)){
                                if(!isOnWaitingList(dataSnapshot)){
-                                   finalCourseStatus = mcContext.getString(R.string.waitingList);
+                                   if(dataSnapshot.child("waitingList").exists()) {
+                                       finalCourseStatus = "Course Is Full";
+                                   }else { // waiting list is not exist
+                                       finalCourseStatus = mcContext.getString(R.string.waitingList);
+                                   }
                                }else{  // isOnWaitingList is TRUE
                                    int numOfUserOnWaitingList = Integer.parseInt(dataSnapshot.child(mcContext.getString(R.string.waitingListOnFB)).child(user_id)
                                            .child("position").getValue().toString());
@@ -155,31 +171,28 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
         smileRating.setVisibility(View.VISIBLE);
         smileRating.setTextSelectedColor(Color.GREEN);
 
-        smileRating.setNameForSmile(BaseRating.TERRIBLE, "Too Easy!");
-        smileRating.setNameForSmile(BaseRating.BAD, "Easy");
-        smileRating.setNameForSmile(BaseRating.OKAY, "Medium");
-        smileRating.setNameForSmile(BaseRating.GOOD, "Hard");
-        smileRating.setNameForSmile(BaseRating.GREAT, "Very Hard!");
+        smileRating.setNameForSmile(BaseRating.TERRIBLE, "TERRIBLE");
+        smileRating.setNameForSmile(BaseRating.BAD, "BAD");
+        smileRating.setNameForSmile(BaseRating.OKAY, "OKAY");
+        smileRating.setNameForSmile(BaseRating.GOOD, "GOOD");
+        smileRating.setNameForSmile(BaseRating.GREAT, "GREAT");
 
-        smileRating.setOnSmileySelectionListener(new SmileRating.OnSmileySelectionListener() {
-            @Override
-            public void onSmileySelected(@BaseRating.Smiley int smiley, boolean reselected) {
-                // reselected is false when user selects different smiley that previously selected one
-                // true when the same smiley is selected.
-                // Except if it first time, then the value will be false.
-                switch (smiley) {
+        smileRating.setOnSmileySelectionListener((smiley, reselected) -> {
+            // reselected is false when user selects different smiley that previously selected one
+            // true when the same smiley is selected.
+            // Except if it first time, then the value will be false.
+            switch (smiley) {
 
-                    case SmileRating.TERRIBLE:
-                        break;
-                    case SmileRating.BAD:
-                        break;
-                    case SmileRating.OKAY:
-                        break;
-                    case SmileRating.GOOD:
-                        break;
-                    case SmileRating.GREAT:
-                        break;
-                }
+                case SmileRating.TERRIBLE:
+                    break;
+                case SmileRating.BAD:
+                    break;
+                case SmileRating.OKAY:
+                    break;
+                case SmileRating.GOOD:
+                    break;
+                case SmileRating.GREAT:
+                    break;
             }
         });
 
@@ -224,9 +237,6 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
                 startTrainingBtn.setVisibility(View.INVISIBLE);
                 smileRating.setVisibility(View.INVISIBLE);
 
-
-                // taking the data from the vHolder for now // TODO: 02/01/2019 take from firebase
-               // mCourseList.get(vHolder.getAdapterPosition()).setCourseLocation("Room 18");
                 dialog_course_location.setText(mCourseList.get(vHolder.getAdapterPosition()).getCourseLocation());
                 dialog_course_name.setText(mCourseList.get(vHolder.getAdapterPosition()).getCourseName());
                 dialog_course_location.setText(mCourseList.get(vHolder.getAdapterPosition()).getCourseLocation());
@@ -240,61 +250,62 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
                 setStartTrainingBtn(course_id);
 
 
-                dialog_course_status.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        myRef//.child(mcContext.getString(R.string.courses)).child(course_id)
-                                .addListenerForSingleValueEvent(new ValueEventListener() {
-                                    @Override
-                                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                                        final User user1 = getUserByDataSnapshot(dataSnapshot);
-                                        DataSnapshot snap = dataSnapshot.child(mcContext.getString(R.string.courses)).child(course_id);
-                                        try {
-                                            if(!isDatePassed(snap)){
-                                                if(!isFull(snap)){
-                                                    if(!isUserRegistered(snap)){
-                                                        myService.registerUserToCourse(mAdapter, course_id,user1);
-                                                        currentNumOfUsersInCourse = Integer.parseInt(snap.child("currentNumOfUsersInCourse").getValue().toString());
-                                                        //myService.setCurrentNumOfUsersRegisteredToCourse(course_id,currentNumOfUsersInCourse + 1);
-                                                        myDialog.hide();
-                                                    }else{  // isUserRegistered() is TRUE
-                                                        myService.deleteUserFromCourse(course_id,user1);
-                                                        currentNumOfUsersInCourse = Integer.parseInt(snap.child("currentNumOfUsersInCourse").getValue().toString());
-                                                        //myService.setCurrentNumOfUsersRegisteredToCourse(course_id,currentNumOfUsersInCourse - 1);
-                                                        myDialog.hide();
-                                                    }
-                                                }else{  //  isFull() is TRUE
-                                                    if(!isUserRegistered(snap)){
-                                                        if(!isOnWaitingList(snap)){
-                                                            myService.addUserToWaitingList(course_id,user1);
-                                                            myDialog.hide();
-                                                        }else{  // isOnWaitingList is TRUE
-                                                            // TODO delete from waiting list
-                                                        }
-                                                    }else{  // isUserRegistered() is TRUE
-                                                        myService.deleteUserFromCourse(course_id,user1);
-                                                        currentNumOfUsersInCourse = Integer.parseInt(snap.child("currentNumOfUsersInCourse").getValue().toString());
-                                                        //myService.setCurrentNumOfUsersRegisteredToCourse(course_id,currentNumOfUsersInCourse - 1);
-                                                        myDialog.hide();
-                                                    }
+                dialog_course_status.setOnClickListener(v1 ->
+                        myRef.addListenerForSingleValueEvent(new ValueEventListener() {
+                            @Override
+                            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                                final User user1 = getUserByDataSnapshot(dataSnapshot);
+                                DataSnapshot snap = dataSnapshot.child(mcContext.getString(R.string.courses)).child(course_id);
+                                try {
+                                    if(!isDatePassed(snap)){
+                                        if(!isFull(snap)){
+                                            if(!isUserRegistered(snap)){
+                                                if(snap.child("waitingList").exists()) {
+                                                        // do nothing
+                                                }else{
+                                                    myService.registerUserToCourse(mAdapter, course_id, user1);
+                                                    currentNumOfUsersInCourse = Integer.parseInt(snap.child("currentNumOfUsersInCourse").getValue().toString());
+                                                    myDialog.hide();
                                                 }
-                                            }else{  //  isDatePassed() is TRUE
-                                                if(isUserRegistered(snap)){
-                                                    setSmileRatingOn(course_id,user1);
+                                            }else{  // isUserRegistered() is TRUE
+                                                if(snap.child("waitingList").exists()) {
+
+                                                }else{
+                                                    myService.deleteUserFromCourse(course_id, mCourseList.get(vHolder.getAdapterPosition()).getCourseName(), user1);
+                                                    currentNumOfUsersInCourse = Integer.parseInt(snap.child("currentNumOfUsersInCourse").getValue().toString());
+                                                    myDialog.hide();
                                                 }
                                             }
-                                        } catch (ParseException e) {
-                                            e.printStackTrace();
-                                        } catch (JSONException e) {
-                                            e.printStackTrace();
+                                        }else{  //  isFull() is TRUE
+                                            if(!isUserRegistered(snap)){
+                                                if(!isOnWaitingList(snap)){
+                                                    if(!snap.child("waitingList").exists()) {
+                                                        myService.addUserToWaitingList(course_id, user1);
+                                                        myDialog.hide();
+                                                    }
+                                                }else{  // isOnWaitingList is TRUE
+                                                }
+                                            }else{  // isUserRegistered() is TRUE
+                                                myService.deleteUserFromCourse(course_id, mCourseList.get(vHolder.getAdapterPosition()).getCourseName(), user1);
+                                                currentNumOfUsersInCourse = Integer.parseInt(snap.child("currentNumOfUsersInCourse").getValue().toString());
+                                                myDialog.hide();
+                                            }
+                                        }
+                                    }else{  //  isDatePassed() is TRUE
+                                        if(isUserRegistered(snap)){
+                                            setSmileRatingOn(course_id,user1);
                                         }
                                     }
-                                    @Override
-                                    public void onCancelled(@NonNull DatabaseError databaseError) {
-                                    }
-                                });
-                    }
-                });
+                                } catch (ParseException e) {
+                                    e.printStackTrace();
+                                } catch (JSONException e) {
+                                    e.printStackTrace();
+                                }
+                            }
+                            @Override
+                            public void onCancelled(@NonNull DatabaseError databaseError) {
+                            }
+                        }));
                 myDialog.show();
             }
         });
@@ -323,13 +334,11 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
         return false;
     }
     private boolean isOnWaitingList(DataSnapshot dataSnapshot){
-//        boolean result = myService.isOnWaitingList(dataSnapshot.child("courseId").getValue().toString());
 
         if(dataSnapshot.child(mcContext.getString(R.string.waitingListOnFB)).child(user_id).exists()) {
             return true;
         }
         return false;
-//        return result;
     }
     private boolean isUserRegistered(DataSnapshot dataSnapshot){
         if(dataSnapshot.child("registered").child(user_id).exists()) {
@@ -374,10 +383,7 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
     public void onIsFull(boolean isFull) {
         Log.d(TAG, "onIsFull: " + isFull);
     }
-    public void onRegisterUserToCourseFromMyService(boolean isRegisterSuccesfuly) throws JSONException {
 
-       // myService.setCurrentNumOfUsersRegisteredToCourse(course_id,currentNumOfUsersInCourse + 1);
-    }
     public void onIsOnWaitingList(boolean isOnWaitingList) {
         Log.d(TAG, "onIsOnWaitingList: " + isOnWaitingList);
     }
@@ -406,7 +412,7 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
         int age = Integer.valueOf(dataSnapshot.child(mcContext.getString(R.string.users)).child(user_id).child("age").getValue().toString());
         double weigh = Double.valueOf(dataSnapshot.child(mcContext.getString(R.string.users)).child(user_id).child("weigh").getValue().toString());
         long userNumber = Long.parseLong(dataSnapshot.child(mcContext.getString(R.string.users)).child(user_id).child("userNumber").getValue().toString());
-        user =  new User(fullName,user_id,gender,weigh,age,userNumber);
+        user =  new User(fullName,user_id,gender,token,weigh,age,userNumber);
         return user;
     }
 
@@ -436,6 +442,18 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
         FirebaseUser user = firebaseAuth.getCurrentUser();
         user_id = user.getUid();
         courseRegisterRef = FirebaseDatabase.getInstance().getReference(mcContext.getString(R.string.courses));
+        FirebaseInstanceId.getInstance().getInstanceId()
+                .addOnCompleteListener(new OnCompleteListener<InstanceIdResult>() {
+                    @Override
+                    public void onComplete(@NonNull Task<InstanceIdResult> task) {
+                        if (!task.isSuccessful()) {
+                            return;
+                        }
+                        // Get new Instance ID token
+                        token = task.getResult().getToken();
+//                        System.out.println("TOken: " + token);
+                    }
+                });
     }
 
 

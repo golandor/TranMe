@@ -44,7 +44,7 @@ public class MyCloudMessagingService extends FirebaseMessagingService {
     @Override
     public void onNewToken(String token) {
         Log.d(TAG, "Refreshed token: " + token);
-
+        System.out.println("Token: " + token);
         sendRegistrationToServer(token);
     }
 
